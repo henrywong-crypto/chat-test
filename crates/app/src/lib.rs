@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 /// Root crate lib.  Re-exports the Leptos App component and, behind
 /// `#[cfg(feature = "ssr")]`, all server-side modules.
 

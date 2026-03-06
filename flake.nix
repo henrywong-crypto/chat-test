@@ -40,15 +40,17 @@
 
             # Wasm tooling
             wasm-pack
-            wasm-bindgen-cli
             binaryen           # wasm-opt
+            # wasm-bindgen-cli installed via cargo to match dependency version
 
             # Node / Tailwind
             nodejs_22
             nodePackages.npm
+            dart-sass
 
             # AWS / infra
             awscli2
+            docker-compose
 
             # Dev utilities
             just               # justfile runner (alternative to make)

@@ -22,7 +22,11 @@ pub struct AuthUser {
 /// Call once at the root `App` component to make the auth signal available
 /// to all descendants via `use_auth()`.
 pub fn provide_auth_context() {
-    let user: RwSignal<Option<AuthUser>> = RwSignal::new(None);
+    // When DEV_AUTH_BYPASS is set, pre-populate the signal so SSR HTML matches
+    // what the client will render after hydration (avoids hydration mismatch).
+    let initial = dev_auth_initial();
+
+    let user: RwSignal<Option<AuthUser>> = RwSignal::new(initial);
 
     // On the client, read the Cognito token from localStorage and decode the
     // JWT claims without verifying the signature (verification happens
@@ -30,6 +34,11 @@ pub fn provide_auth_context() {
     #[cfg(feature = "hydrate")]
     {
         Effect::new(move |_| {
+            // Check for dev auth bypass meta tag injected by the server.
+            if let Some(dev_user) = dev_auth_user() {
+                user.set(Some(dev_user));
+                return;
+            }
             if let Some(auth_user) = load_from_storage() {
                 user.set(Some(auth_user));
             }
@@ -39,10 +48,52 @@ pub fn provide_auth_context() {
     provide_context(user);
 }
 
+fn dev_auth_initial() -> Option<AuthUser> {
+    #[cfg(feature = "ssr")]
+    {
+        if std::env::var("DEV_AUTH_BYPASS").ok().as_deref() == Some("true") {
+            return Some(dev_auth_user_value());
+        }
+    }
+    #[cfg(feature = "hydrate")]
+    {
+        // Read the meta tag synchronously so the initial signal matches SSR.
+        if let Some(_) = dev_auth_user() {
+            return Some(dev_auth_user_value());
+        }
+    }
+    None
+}
+
+fn dev_auth_user_value() -> AuthUser {
+    AuthUser {
+        id:       "dev-user-0000".into(),
+        email:    "dev@localhost".into(),
+        is_admin: true,
+        token:    "dev-bypass-token".into(),
+    }
+}
+
 /// Returns the auth signal.  Must be called inside a descendant of the
 /// component that called `provide_auth_context()`.
 pub fn use_auth() -> RwSignal<Option<AuthUser>> {
     expect_context()
+}
+
+// ── Dev auth bypass ──────────────────────────────────────────────────────────
+
+/// Check for `<meta name="dev-auth-bypass" content="true">` injected by the
+/// server when `DEV_AUTH_BYPASS=true`.  Returns a fake dev user so the UI is
+/// usable without Cognito.
+#[cfg(feature = "hydrate")]
+fn dev_auth_user() -> Option<AuthUser> {
+    let doc = web_sys::window()?.document()?;
+    let meta = doc.query_selector(r#"meta[name="dev-auth-bypass"]"#).ok()??;
+    let content = meta.get_attribute("content")?;
+    if content != "true" {
+        return None;
+    }
+    Some(dev_auth_user_value())
 }
 
 // ── Client-side JWT decode ────────────────────────────────────────────────────

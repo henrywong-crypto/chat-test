@@ -87,6 +87,20 @@ where
     type Rejection = AuthError;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        // Dev auth bypass — skip JWT verification entirely.
+        if std::env::var("DEV_AUTH_BYPASS").ok().as_deref() == Some("true") {
+            debug!("DEV_AUTH_BYPASS enabled — returning dev user");
+            return Ok(CurrentUser(User {
+                id:     "dev-user-0000".into(),
+                email:  "dev@localhost".into(),
+                groups: vec![
+                    shared::UserGroup::Admin,
+                    shared::UserGroup::CreatingBotAllowed,
+                    shared::UserGroup::PublishAllowed,
+                ],
+            }));
+        }
+
         let token = extract_bearer(parts)?;
         debug!("authenticating request");
         let user = verify_token(&token, &state.jwks_cache(), state.cognito_config()).await?;

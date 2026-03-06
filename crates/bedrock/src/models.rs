@@ -183,6 +183,16 @@ static MODELS: &[ModelInfo] = &[
         supports_global_inference:  true,
     },
     ModelInfo {
+        id:              "claude-sonnet-4-6",
+        bedrock_model_id: "us.anthropic.claude-sonnet-4-6",
+        display_name:    "Claude Sonnet 4.6",
+        provider:        ModelProvider::Anthropic,
+        capabilities:    caps!(tools=true,  vision=true,  reasoning=true),
+        pricing:         price!(in=0.003, out=0.015, cw=0.00375, cr=0.0003),
+        cross_region_prefixes:      CROSS_REGION_ALL,
+        supports_global_inference:  true,
+    },
+    ModelInfo {
         id:              "claude-4-5-opus",
         bedrock_model_id: "anthropic.claude-opus-4-5-20251101-v1:0",
         display_name:    "Claude Opus 4.5",

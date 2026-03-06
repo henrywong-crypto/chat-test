@@ -63,34 +63,32 @@ pub fn SettingsModal() -> impl IntoView {
 fn ProfileTab() -> impl IntoView {
     let auth = use_auth();
 
+    let email = Memo::new(move |_| {
+        auth.get().map(|u| u.email.clone()).unwrap_or_else(|| "Not signed in".into())
+    });
+    let user_id = Memo::new(move |_| {
+        auth.get().map(|u| u.id.clone()).unwrap_or_default()
+    });
+    let role = Memo::new(move |_| {
+        auth.get().map(|u| if u.is_admin { "Admin" } else { "User" }).unwrap_or("—").to_string()
+    });
+
     view! {
         <div class="settings-tab-content">
-            {move || {
-                let user = auth.get();
-                let email   = user.as_ref().map(|u| u.email.clone())
-                    .unwrap_or_else(|| "Not signed in".into());
-                let user_id = user.as_ref().map(|u| u.id.clone())
-                    .unwrap_or_default();
-                let role    = user.as_ref().map(|u| {
-                    if u.is_admin { "Admin" } else { "User" }
-                }).unwrap_or("—");
-                view! {
-                    <table class="info-table">
-                        <tr>
-                            <th>"Email"</th>
-                            <td>{email}</td>
-                        </tr>
-                        <tr>
-                            <th>"User ID"</th>
-                            <td class="mono truncate">{user_id}</td>
-                        </tr>
-                        <tr>
-                            <th>"Role"</th>
-                            <td>{role}</td>
-                        </tr>
-                    </table>
-                }
-            }}
+            <table class="info-table">
+                <tr>
+                    <th>"Email"</th>
+                    <td><span>{move || email.get()}</span></td>
+                </tr>
+                <tr>
+                    <th>"User ID"</th>
+                    <td class="mono truncate"><span>{move || user_id.get()}</span></td>
+                </tr>
+                <tr>
+                    <th>"Role"</th>
+                    <td><span>{move || role.get()}</span></td>
+                </tr>
+            </table>
 
             <div class="settings-actions">
                 <button

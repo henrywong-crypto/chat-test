@@ -71,7 +71,7 @@ pub async fn stream_response(
         .send()
         .await
         .map_err(|e| {
-            let msg = e.to_string();
+            let msg = format!("{e:?}");
             if msg.contains("ThrottlingException") || msg.contains("TooManyRequests") {
                 BedrockError::Throttling
             } else {

@@ -26,7 +26,8 @@ pub struct Config {
     #[serde(default = "default_region")]
     pub aws_region: String,
 
-    /// Cognito User Pool ID.
+    /// Cognito User Pool ID (optional when DEV_AUTH_BYPASS=true).
+    #[serde(default)]
     pub cognito_user_pool_id: String,
 
     /// DynamoDB table names.

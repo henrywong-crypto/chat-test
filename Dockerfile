@@ -2,7 +2,7 @@
 # cargo-leptos builds both the SSR server binary and the WASM/asset bundle in
 # a single command, so this stage needs the full Rust + WASM + Node toolchain.
 
-FROM rust:1.82-bookworm AS builder
+FROM rust:1.94-bookworm AS builder
 
 # ── System deps ────────────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,7 +17,7 @@ RUN rustup target add wasm32-unknown-unknown
 # ── cargo-leptos + wasm-bindgen-cli ────────────────────────────────────────────
 # Pin versions to match the workspace deps for reproducible builds.
 RUN cargo install cargo-leptos --locked
-RUN cargo install wasm-bindgen-cli --locked
+RUN cargo install wasm-bindgen-cli --version 0.2.114 --locked
 
 # ── Dependency pre-fetch (cache layer) ─────────────────────────────────────────
 WORKDIR /app
@@ -45,8 +45,8 @@ COPY . .
 
 # ── cargo leptos release build ──────────────────────────────────────────────────
 # Produces:
-#   target/server/release/server   ← SSR binary
-#   target/site/                   ← WASM, CSS, and static assets
+#   target/release/app   ← SSR binary
+#   target/site/         ← WASM, CSS, and static assets
 RUN cargo leptos build --release
 
 # ── Stage 2: Runtime ─────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY --from=builder /app/target/server/release/server ./server
+COPY --from=builder /app/target/release/app ./server
 COPY --from=builder /app/target/site                  ./site
 
 # cargo-leptos / Leptos look for compiled frontend assets here.

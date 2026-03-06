@@ -81,12 +81,21 @@ async fn list_models() -> axum::Json<serde_json::Value> {
 // ── Leptos shell ──────────────────────────────────────────────────────────────
 
 fn shell(options: LeptosOptions) -> impl IntoView {
+    let dev_bypass = if std::env::var("DEV_AUTH_BYPASS").ok().as_deref() == Some("true") {
+        "true"
+    } else {
+        "false"
+    };
+
     view! {
         <!DOCTYPE html>
-        <html lang="en">
+        <html lang="en" data-theme="light">
             <head>
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <meta name="dev-auth-bypass" content=dev_bypass/>
+                <title>"Bedrock RS"</title>
+                <link id="leptos" rel="stylesheet" href="/pkg/app.css"/>
                 <AutoReload options=options.clone()/>
                 <HydrationScripts options=options.clone()/>
             </head>

@@ -176,8 +176,7 @@ pub fn build_system_blocks(instruction: Option<&str>) -> Vec<SystemContentBlock>
 pub fn build_inference_config(params: &GenerationParams) -> InferenceConfiguration {
     let mut b = InferenceConfiguration::builder()
         .max_tokens(params.max_tokens as i32)
-        .temperature(params.temperature)
-        .top_p(params.top_p);
+        .temperature(params.temperature);
 
     if !params.stop_sequences.is_empty() {
         b = b.set_stop_sequences(Some(params.stop_sequences.clone()));

@@ -1,7 +1,6 @@
 /// Root Leptos application component.
 
 use leptos::prelude::*;
-use leptos_meta::*;
 use leptos_router::{
     components::{Route, Router, Routes},
     path,
@@ -33,19 +32,12 @@ use crate::{
 
 #[component]
 pub fn App() -> impl IntoView {
-    provide_meta_context();
     provide_auth_context();
     provide_conversation_context();
     provide_settings_context();
     provide_toast_context();
 
     view! {
-        <Html attr:lang="en" attr:data-theme="light"/>
-        <Title text="Bedrock RS"/>
-        <Meta charset="utf-8"/>
-        <Meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <Stylesheet id="leptos" href="/pkg/app.css"/>
-
         <Router>
             <AppShell>
                 <Routes fallback=|| view! { <NotFound/> }>

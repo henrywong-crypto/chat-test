@@ -55,6 +55,7 @@ web-sys              = { version = "0.3", optional = true, features = [
     "EventSource", "MessageEvent",
 ] }
 console_error_panic_hook = { version = "0.1", optional = true }
+getrandom                = { version = "0.2", optional = true, features = ["js"] }
 
 [features]
 default = []
@@ -90,10 +91,11 @@ hydrate = [
     "dep:js-sys",
     "dep:web-sys",
     "dep:console_error_panic_hook",
+    "dep:getrandom",
 ]
 
 [[bin]]
-name             = "server"
+name             = "app"
 path             = "src/main.rs"
 required-features = ["ssr"]
 
@@ -103,7 +105,7 @@ site-root        = "target/site"
 site-pkg-dir     = "pkg"
 style-file       = "style/main.scss"
 assets-dir       = "public"
-site-addr        = "127.0.0.1:3000"
+site-addr        = "0.0.0.0:3000"
 reload-port      = 3001
 browserquery     = "defaults"
 env              = "DEV"
