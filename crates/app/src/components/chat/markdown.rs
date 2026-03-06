@@ -3,7 +3,7 @@
 use leptos::prelude::*;
 use pulldown_cmark::{html, Options, Parser};
 
-pub fn md_to_html(src: &str) -> String {
+pub fn render_markdown_html(src: &str) -> String {
     let opts = Options::ENABLE_TABLES
         | Options::ENABLE_STRIKETHROUGH
         | Options::ENABLE_SMART_PUNCTUATION;
@@ -15,7 +15,7 @@ pub fn md_to_html(src: &str) -> String {
 
 #[component]
 pub fn MarkdownRenderer(#[prop(into)] content: String) -> impl IntoView {
-    let html = md_to_html(&content);
+    let html = render_markdown_html(&content);
     view! {
         <div class="markdown-content" inner_html=html></div>
     }

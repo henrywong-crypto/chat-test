@@ -1,7 +1,6 @@
 /// Full chat page — handles both new conversations (`/`) and existing ones (`/c/:id`).
 
 use std::sync::atomic::{AtomicU32, Ordering};
-
 use leptos::prelude::*;
 use leptos_router::hooks::{use_navigate, use_params_map};
 #[cfg(feature = "hydrate")]
@@ -17,10 +16,9 @@ use crate::context::conversations::use_conversation_context;
 
 static MSG_COUNTER: AtomicU32 = AtomicU32::new(1);
 
-fn tmp_id() -> String {
+fn generate_tmp_id() -> String {
     format!("tmp-{}", MSG_COUNTER.fetch_add(1, Ordering::Relaxed))
 }
-
 #[component]
 pub fn ChatPage() -> impl IntoView {
     let auth     = use_auth();
@@ -103,7 +101,7 @@ pub fn ChatPage() -> impl IntoView {
         // Optimistic user bubble — shown in both SSR stub and hydrate.
         set_messages.update(|v| {
             v.push(UiMessage {
-                id:      tmp_id(),
+                id:      generate_tmp_id(),
                 role:    MessageRole::User,
                 content: text.clone(),
             });

@@ -2,10 +2,10 @@
 /// Lists all Cognito users and allows toggling their group membership inline.
 
 use leptos::prelude::*;
-use shared::AdminUserRecord;
+use shared::{AdminUserRecord, UserGroup};
 #[cfg(feature = "hydrate")]
 use shared::UpdateUserGroupsRequest;
-use shared::UserGroup;
+use templates::{Breadcrumb, Page};
 
 use crate::context::auth::use_auth;
 
@@ -31,54 +31,58 @@ pub fn AdminUsersPage() -> impl IntoView {
 
     let is_admin = move || auth.get().map(|u| u.is_admin).unwrap_or(false);
 
-    view! {
-        <div class="page-content">
-            <div class="page-header">
-                <h1 class="page-title">"Users"</h1>
-            </div>
+    let users_table = view! {
+        <Show
+            when=is_admin
+            fallback=|| view! { <p class="admin-denied">"Access denied — admin only."</p> }
+        >
+            {move || {
+                users.get().map(|wrap| {
+                    let list = (*wrap).clone();
+                    if list.is_empty() {
+                        view! {
+                            <div class="empty-state">
+                                <h2>"No users"</h2>
+                                <p>"No users found in the Cognito pool."</p>
+                            </div>
+                        }.into_any()
+                    } else {
+                        view! {
+                            <div class="admin-table-wrap">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Email"</th>
+                                            <th>"ID"</th>
+                                            <th class="center">"Admin"</th>
+                                            <th class="center">"Create Bots"</th>
+                                            <th class="center">"Publish"</th>
+                                            <th class="center">"Status"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {list.into_iter().map(|user: AdminUserRecord| {
+                                            view! { <UserRow user=user version=version /> }
+                                        }).collect_view()}
+                                    </tbody>
+                                </table>
+                            </div>
+                        }.into_any()
+                    }
+                })
+            }}
+        </Show>
+    };
 
-            <Show
-                when=is_admin
-                fallback=|| view! { <p class="admin-denied">"Access denied — admin only."</p> }
-            >
-                {move || {
-                    users.get().map(|wrap| {
-                        let list = (*wrap).clone();
-                        if list.is_empty() {
-                            view! {
-                                <div class="empty-state">
-                                    <h2>"No users"</h2>
-                                    <p>"No users found in the Cognito pool."</p>
-                                </div>
-                            }.into_any()
-                        } else {
-                            view! {
-                                <div class="admin-table-wrap">
-                                    <table class="admin-table">
-                                        <thead>
-                                            <tr>
-                                                <th>"Email"</th>
-                                                <th>"ID"</th>
-                                                <th class="center">"Admin"</th>
-                                                <th class="center">"Create Bots"</th>
-                                                <th class="center">"Publish"</th>
-                                                <th class="center">"Status"</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {list.into_iter().map(|user: AdminUserRecord| {
-                                                view! { <UserRow user=user version=version /> }
-                                            }).collect_view()}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            }.into_any()
-                        }
-                    })
-                }}
-            </Show>
-        </div>
+    Page {
+        title: "Users".to_string(),
+        breadcrumbs: vec![Breadcrumb::current("Users")],
+        nav_links: vec![],
+        info_rows: vec![],
+        content: users_table,
+        subpages: vec![],
     }
+    .into_view()
 }
 
 // ── UserRow ───────────────────────────────────────────────────────────────────

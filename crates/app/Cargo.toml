@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 shared         = { workspace = true }
+templates      = { workspace = true }
 leptos         = { workspace = true, features = [] }
 leptos_meta    = { workspace = true, features = [] }
 leptos_router  = { workspace = true, features = [] }

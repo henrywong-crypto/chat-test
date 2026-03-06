@@ -24,7 +24,7 @@ pub struct AuthUser {
 pub fn provide_auth_context() {
     // When DEV_AUTH_BYPASS is set, pre-populate the signal so SSR HTML matches
     // what the client will render after hydration (avoids hydration mismatch).
-    let initial = dev_auth_initial();
+    let initial = get_initial_dev_auth_user();
 
     let user: RwSignal<Option<AuthUser>> = RwSignal::new(initial);
 
@@ -35,7 +35,7 @@ pub fn provide_auth_context() {
     {
         Effect::new(move |_| {
             // Check for dev auth bypass meta tag injected by the server.
-            if let Some(dev_user) = dev_auth_user() {
+            if let Some(dev_user) = load_dev_auth_user() {
                 user.set(Some(dev_user));
                 return;
             }
@@ -48,24 +48,24 @@ pub fn provide_auth_context() {
     provide_context(user);
 }
 
-fn dev_auth_initial() -> Option<AuthUser> {
+fn get_initial_dev_auth_user() -> Option<AuthUser> {
     #[cfg(feature = "ssr")]
     {
         if std::env::var("DEV_AUTH_BYPASS").ok().as_deref() == Some("true") {
-            return Some(dev_auth_user_value());
+            return Some(build_dev_auth_user());
         }
     }
     #[cfg(feature = "hydrate")]
     {
         // Read the meta tag synchronously so the initial signal matches SSR.
-        if let Some(_) = dev_auth_user() {
-            return Some(dev_auth_user_value());
+        if let Some(_) = load_dev_auth_user() {
+            return Some(build_dev_auth_user());
         }
     }
     None
 }
 
-fn dev_auth_user_value() -> AuthUser {
+fn build_dev_auth_user() -> AuthUser {
     AuthUser {
         id:       "dev-user-0000".into(),
         email:    "dev@localhost".into(),
@@ -86,14 +86,14 @@ pub fn use_auth() -> RwSignal<Option<AuthUser>> {
 /// server when `DEV_AUTH_BYPASS=true`.  Returns a fake dev user so the UI is
 /// usable without Cognito.
 #[cfg(feature = "hydrate")]
-fn dev_auth_user() -> Option<AuthUser> {
+fn load_dev_auth_user() -> Option<AuthUser> {
     let doc = web_sys::window()?.document()?;
     let meta = doc.query_selector(r#"meta[name="dev-auth-bypass"]"#).ok()??;
     let content = meta.get_attribute("content")?;
     if content != "true" {
         return None;
     }
-    Some(dev_auth_user_value())
+    Some(build_dev_auth_user())
 }
 
 // ── Client-side JWT decode ────────────────────────────────────────────────────

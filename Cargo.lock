@@ -95,6 +95,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
+ "templates",
  "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
@@ -3755,6 +3756,13 @@ dependencies = [
  "throw_error",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "templates"
+version = "0.1.0"
+dependencies = [
+ "leptos",
 ]
 
 [[package]]

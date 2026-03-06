@@ -1,5 +1,4 @@
 use leptos::prelude::*;
-
 use super::markdown::MarkdownRenderer;
 
 #[component]

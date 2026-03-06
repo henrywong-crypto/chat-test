@@ -5,15 +5,17 @@ members = [
     "crates/auth",
     "crates/bedrock",
     "crates/db",
+    "templates",
 ]
 resolver = "2"
 
 [workspace.dependencies]
 # Internal crates
-shared  = { path = "crates/shared" }
-auth    = { path = "crates/auth" }
-bedrock = { path = "crates/bedrock" }
-db      = { path = "crates/db" }
+shared    = { path = "crates/shared" }
+auth      = { path = "crates/auth" }
+bedrock   = { path = "crates/bedrock" }
+db        = { path = "crates/db" }
+templates = { path = "templates" }
 
 # Leptos
 leptos        = { version = "0.7", features = [] }

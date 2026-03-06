@@ -5,6 +5,7 @@ use leptos_router::hooks::{use_navigate, use_params_map};
 use shared::{BotVisibility, GenerationParams};
 #[cfg(feature = "hydrate")]
 use shared::{CreateBotRequest, UpdateBotRequest};
+use templates::{Breadcrumb, NavLink, Page};
 
 use crate::components::bots::generation_params_editor::GenerationParamsEditor;
 use crate::context::auth::use_auth;
@@ -19,6 +20,7 @@ pub fn BotEditorPage() -> impl IntoView {
 
     // Route param — present when editing, absent when creating.
     let bot_id = move || params.with(|p| p.get("id").map(|s| s.to_string()));
+    let is_edit = move || bot_id().is_some();
 
     // ── Form state ────────────────────────────────────────────────────────────
     let (title,       set_title)       = signal(String::new());
@@ -26,10 +28,10 @@ pub fn BotEditorPage() -> impl IntoView {
     let (instruction, set_instruction) = signal(String::new());
     let (model_id,    set_model_id)    = signal(String::new());
     let (visibility,  set_visibility)  = signal("private".to_string());
-    let show_params   = RwSignal::new(false);
-    let gen_params    = RwSignal::new(GenerationParams::default());
-    let (submitting,  set_submitting)  = signal(false);
-    let (error_msg,   set_error_msg)   = signal::<Option<String>>(None);
+    let show_params  = RwSignal::new(false);
+    let gen_params   = RwSignal::new(GenerationParams::default());
+    let (submitting, set_submitting)   = signal(false);
+    let (error_msg,  set_error_msg)    = signal::<Option<String>>(None);
 
     // ── Load existing bot if editing ─────────────────────────────────────────
     let bot_res = LocalResource::new(move || {
@@ -65,7 +67,6 @@ pub fn BotEditorPage() -> impl IntoView {
         }
     });
 
-    // Models for the model selector
     let models = LocalResource::new(move || async move {
         #[cfg(feature = "hydrate")]
         { crate::api::fetch_models().await.unwrap_or_default() }
@@ -93,12 +94,12 @@ pub fn BotEditorPage() -> impl IntoView {
 
         #[cfg(feature = "hydrate")]
         {
-            let token    = auth.get_untracked().map(|u| u.token).unwrap_or_default();
-            let title_v  = title.get_untracked();
-            let desc_v   = description.get_untracked();
-            let instr_v  = instruction.get_untracked();
-            let gp       = gen_params.get_untracked();
-            let edit_id  = bot_id();
+            let token   = auth.get_untracked().map(|u| u.token).unwrap_or_default();
+            let title_v = title.get_untracked();
+            let desc_v  = description.get_untracked();
+            let instr_v = instruction.get_untracked();
+            let gp      = gen_params.get_untracked();
+            let edit_id = bot_id();
 
             wasm_bindgen_futures::spawn_local(async move {
                 let result = if let Some(id) = edit_id {
@@ -137,135 +138,130 @@ pub fn BotEditorPage() -> impl IntoView {
         set_submitting.set(false);
     };
 
-    let is_edit = move || bot_id().is_some();
+    let form = view! {
+        <form class="bot-form" on:submit=on_submit>
+            {move || error_msg.get().map(|e| view! {
+                <div class="form-error-banner">{e}</div>
+            })}
 
-    view! {
-        <div class="page-content page-content-narrow">
-            <div class="page-header">
-                <h1 class="page-title">
-                    {move || if is_edit() { "Edit Bot" } else { "Create Bot" }}
-                </h1>
+            <div class="form-group">
+                <label class="form-label" for="bot-title">"Title"</label>
+                <input
+                    id="bot-title"
+                    type="text"
+                    class="form-input"
+                    required=true
+                    placeholder="My Assistant"
+                    prop:value=title
+                    on:input=move |ev| set_title.set(event_target_value(&ev))
+                />
             </div>
 
-            <form class="bot-form" on:submit=on_submit>
-                // Error banner
-                {move || error_msg.get().map(|e| view! {
-                    <div class="form-error-banner">{e}</div>
-                })}
+            <div class="form-group">
+                <label class="form-label" for="bot-desc">"Description"</label>
+                <input
+                    id="bot-desc"
+                    type="text"
+                    class="form-input"
+                    placeholder="Short description shown in the Bot Store"
+                    prop:value=description
+                    on:input=move |ev| set_description.set(event_target_value(&ev))
+                />
+            </div>
 
-                // Title
-                <div class="form-group">
-                    <label class="form-label" for="bot-title">"Title"</label>
-                    <input
-                        id="bot-title"
-                        type="text"
-                        class="form-input"
-                        required=true
-                        placeholder="My Assistant"
-                        prop:value=title
-                        on:input=move |ev| set_title.set(event_target_value(&ev))
-                    />
-                </div>
+            <div class="form-group">
+                <label class="form-label" for="bot-instr">"Instruction (system prompt)"</label>
+                <textarea
+                    id="bot-instr"
+                    class="form-textarea"
+                    rows="6"
+                    required=true
+                    placeholder="You are a helpful assistant that…"
+                    prop:value=instruction
+                    on:input=move |ev| set_instruction.set(event_target_value(&ev))
+                />
+            </div>
 
-                // Description
-                <div class="form-group">
-                    <label class="form-label" for="bot-desc">"Description"</label>
-                    <input
-                        id="bot-desc"
-                        type="text"
-                        class="form-input"
-                        placeholder="Short description shown in the Bot Store"
-                        prop:value=description
-                        on:input=move |ev| set_description.set(event_target_value(&ev))
-                    />
-                </div>
+            <div class="form-group">
+                <label class="form-label" for="bot-model">"Model override (optional)"</label>
+                <select
+                    id="bot-model"
+                    class="model-selector form-select"
+                    prop:value=model_id
+                    on:change=move |ev| set_model_id.set(event_target_value(&ev))
+                >
+                    <option value="">"User default"</option>
+                    {move || {
+                        models.get().map(|wrap| {
+                            (*wrap).clone().into_iter().map(|m: shared::ModelInfo| view! {
+                                <option value=m.id.clone()>{m.display_name}</option>
+                            }).collect_view()
+                        })
+                    }}
+                </select>
+            </div>
 
-                // Instruction (system prompt)
-                <div class="form-group">
-                    <label class="form-label" for="bot-instr">"Instruction (system prompt)"</label>
-                    <textarea
-                        id="bot-instr"
-                        class="form-textarea"
-                        rows="6"
-                        required=true
-                        placeholder="You are a helpful assistant that…"
-                        prop:value=instruction
-                        on:input=move |ev| set_instruction.set(event_target_value(&ev))
-                    />
-                </div>
+            <div class="form-group">
+                <label class="form-label" for="bot-vis">"Visibility"</label>
+                <select
+                    id="bot-vis"
+                    class="model-selector form-select"
+                    prop:value=visibility
+                    on:change=move |ev| set_visibility.set(event_target_value(&ev))
+                >
+                    <option value="private">"Private"</option>
+                    <option value="unlisted">"Unlisted"</option>
+                    <option value="public">"Public"</option>
+                </select>
+            </div>
 
-                // Model
-                <div class="form-group">
-                    <label class="form-label" for="bot-model">"Model override (optional)"</label>
-                    <select
-                        id="bot-model"
-                        class="model-selector form-select"
-                        prop:value=model_id
-                        on:change=move |ev| set_model_id.set(event_target_value(&ev))
-                    >
-                        <option value="">"User default"</option>
-                        {move || {
-                            models.get().map(|wrap| {
-                                (*wrap).clone().into_iter().map(|m: shared::ModelInfo| view! {
-                                    <option value=m.id.clone()>{m.display_name}</option>
-                                }).collect_view()
-                            })
-                        }}
-                    </select>
-                </div>
+            <div class="form-group">
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    on:click=move |_| show_params.update(|v| *v = !*v)
+                >
+                    {move || if show_params.get() {
+                        "▲ Hide generation parameters"
+                    } else {
+                        "▼ Show generation parameters"
+                    }}
+                </button>
+            </div>
 
-                // Visibility
-                <div class="form-group">
-                    <label class="form-label" for="bot-vis">"Visibility"</label>
-                    <select
-                        id="bot-vis"
-                        class="model-selector form-select"
-                        prop:value=visibility
-                        on:change=move |ev| set_visibility.set(event_target_value(&ev))
-                    >
-                        <option value="private">"Private"</option>
-                        <option value="unlisted">"Unlisted"</option>
-                        <option value="public">"Public"</option>
-                    </select>
-                </div>
+            {move || show_params.get().then(|| view! {
+                <GenerationParamsEditor params=gen_params/>
+            })}
 
-                // Generation params toggle
-                <div class="form-group">
-                    <button
-                        type="button"
-                        class="btn btn-secondary btn-sm"
-                        on:click=move |_| show_params.update(|v| *v = !*v)
-                    >
-                        {move || if show_params.get() {
-                            "▲ Hide generation parameters"
-                        } else {
-                            "▼ Show generation parameters"
-                        }}
-                    </button>
-                </div>
+            <div class="form-actions">
+                <a href="/bots" class="btn btn-secondary">"Cancel"</a>
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    prop:disabled=submitting
+                >
+                    {move || if submitting.get() {
+                        "Saving…"
+                    } else if is_edit() {
+                        "Save changes"
+                    } else {
+                        "Create bot"
+                    }}
+                </button>
+            </div>
+        </form>
+    };
 
-                {move || show_params.get().then(|| view! {
-                    <GenerationParamsEditor params=gen_params/>
-                })}
-
-                // Actions
-                <div class="form-actions">
-                    <a href="/bots" class="btn btn-secondary">"Cancel"</a>
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                        prop:disabled=submitting
-                    >
-                        {move || if submitting.get() {
-                            "Saving…"
-                        } else if is_edit() {
-                            "Save changes"
-                        } else {
-                            "Create bot"
-                        }}
-                    </button>
-                </div>
-            </form>
-        </div>
+    Page {
+        title: if is_edit() { "Edit Bot".to_string() } else { "Create Bot".to_string() },
+        breadcrumbs: vec![
+            Breadcrumb::link("My Bots", "/bots"),
+            Breadcrumb::current(if is_edit() { "Edit" } else { "New" }),
+        ],
+        nav_links: vec![NavLink::back()],
+        info_rows: vec![],
+        content: form,
+        subpages: vec![],
     }
+    .into_view()
 }

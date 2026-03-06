@@ -1,5 +1,4 @@
 use leptos::prelude::*;
-
 use super::{assistant_message::AssistantMessage, user_message::UserMessage};
 
 // ── Domain type ───────────────────────────────────────────────────────────────

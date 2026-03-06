@@ -3,6 +3,7 @@
 
 use leptos::prelude::*;
 use shared::UsageAnalyticsResponse;
+use templates::{Breadcrumb, Page};
 
 use crate::context::auth::use_auth;
 
@@ -17,9 +18,7 @@ pub fn AdminAnalyticsPage() -> impl IntoView {
         async move {
             if token.is_empty() { return None::<UsageAnalyticsResponse>; }
             #[cfg(feature = "hydrate")]
-            {
-                crate::api::fetch_analytics(&token).await.ok()
-            }
+            { crate::api::fetch_analytics(&token).await.ok() }
             #[cfg(not(feature = "hydrate"))]
             { None }
         }
@@ -27,29 +26,33 @@ pub fn AdminAnalyticsPage() -> impl IntoView {
 
     let is_admin = move || auth.get().map(|u| u.is_admin).unwrap_or(false);
 
-    view! {
-        <div class="page-content">
-            <div class="page-header">
-                <h1 class="page-title">"Usage Analytics"</h1>
-            </div>
+    let dashboard = view! {
+        <Show
+            when=is_admin
+            fallback=|| view! { <p class="admin-denied">"Access denied — admin only."</p> }
+        >
+            {move || {
+                analytics.get().map(|wrap| {
+                    match (*wrap).clone() {
+                        None => view! {
+                            <p class="text-muted">"No analytics data available."</p>
+                        }.into_any(),
+                        Some(data) => view! { <AnalyticsDashboard data=data /> }.into_any(),
+                    }
+                })
+            }}
+        </Show>
+    };
 
-            <Show
-                when=is_admin
-                fallback=|| view! { <p class="admin-denied">"Access denied — admin only."</p> }
-            >
-                {move || {
-                    analytics.get().map(|wrap| {
-                        match (*wrap).clone() {
-                            None => view! {
-                                <p class="text-muted">"No analytics data available."</p>
-                            }.into_any(),
-                            Some(data) => view! { <AnalyticsDashboard data=data /> }.into_any(),
-                        }
-                    })
-                }}
-            </Show>
-        </div>
+    Page {
+        title: "Usage Analytics".to_string(),
+        breadcrumbs: vec![Breadcrumb::current("Usage Analytics")],
+        nav_links: vec![],
+        info_rows: vec![],
+        content: dashboard,
+        subpages: vec![],
     }
+    .into_view()
 }
 
 // ── AnalyticsDashboard ────────────────────────────────────────────────────────

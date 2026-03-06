@@ -6,12 +6,11 @@
 /// 3.  From any descendant: `use_toasts().push_error("oops")`.
 
 use std::sync::atomic::{AtomicU32, Ordering};
-
 use leptos::prelude::*;
 
 static NEXT_ID: AtomicU32 = AtomicU32::new(1);
 
-fn next_id() -> u32 {
+fn generate_next_id() -> u32 {
     NEXT_ID.fetch_add(1, Ordering::Relaxed)
 }
 
@@ -40,7 +39,7 @@ pub struct ToastContext(RwSignal<Vec<Toast>>);
 impl ToastContext {
     pub fn push(&self, message: impl Into<String>, kind: ToastKind) {
         self.0.update(|v| {
-            v.push(Toast { id: next_id(), message: message.into(), kind });
+            v.push(Toast { id: generate_next_id(), message: message.into(), kind });
         });
     }
     pub fn push_error(&self, message: impl Into<String>) {
