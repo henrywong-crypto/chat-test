@@ -75,6 +75,7 @@ pub struct AppState {
     // ── DB ────────────────────────────────────────────────────────────────────
     pub conversations: ConversationRepository,
     pub bots:          BotRepository,
+    pub s3:            Arc<S3Store>,
 
     // ── Bedrock ───────────────────────────────────────────────────────────────
     pub bedrock_runtime:  BedrockRuntimeClient,
@@ -116,7 +117,7 @@ impl AppState {
         let cognito_client  = CognitoClient::new(&aws_conf);
 
         // ── Repositories ──────────────────────────────────────────────────────
-        let conversations = ConversationRepository::new(dynamo.clone(), s3, &cfg.conversations_table_name);
+        let conversations = ConversationRepository::new(dynamo.clone(), s3.clone(), &cfg.conversations_table_name);
         let bots          = BotRepository::new(dynamo.clone(), &cfg.bots_table_name);
 
         let profile_cache = Arc::new(InferenceProfileRepository::new(
@@ -137,6 +138,7 @@ impl AppState {
             jwks,
             conversations,
             bots,
+            s3,
             bedrock_runtime,
             profile_manager,
             cognito_client,

@@ -4,20 +4,23 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use leptos::prelude::*;
 use leptos_router::hooks::{use_navigate, use_params_map};
 #[cfg(feature = "hydrate")]
-use shared::ContentBlock;
+use shared::{ContentBlock, S3FileContent};
 use shared::{Conversation, Message, ModelInfo, Role};
 
 use crate::context::auth::use_auth;
 use crate::context::conversations::use_conversation_context;
 
+#[allow(dead_code)]
 static MSG_COUNTER: AtomicU32 = AtomicU32::new(1);
 
+#[cfg_attr(not(feature = "hydrate"), allow(dead_code))]
 fn generate_tmp_id() -> String {
     format!("tmp-{}", MSG_COUNTER.fetch_add(1, Ordering::Relaxed))
 }
 
 #[derive(Clone)]
 struct UiMessage {
+    #[allow(dead_code)]
     id:      String,
     role:    String,
     content: String,
@@ -35,12 +38,14 @@ pub fn ChatPage() -> impl IntoView {
     let (messages,     set_messages)     = signal(Vec::<UiMessage>::new());
     let (streaming,    set_streaming)    = signal(String::new());
     let (is_streaming, set_is_streaming) = signal(false);
+    let (uploading,    set_uploading)    = signal(false);
     let conv_title                       = RwSignal::new(String::new());
+    let file_ref: NodeRef<leptos::html::Input> = NodeRef::new();
 
     let conv_id = move || params.with(|p| p.get("id").map(|s| s.to_string()));
 
     #[cfg(not(feature = "hydrate"))]
-    let _ = (&conv_ctx, &navigate, &conv_id);
+    let _ = (&conv_ctx, &navigate, &conv_id, &set_uploading, &file_ref);
 
     // ── Models ────────────────────────────────────────────────────────────────
     let models_res = LocalResource::new(move || async move {
@@ -75,13 +80,22 @@ pub fn ChatPage() -> impl IntoView {
                 let ui: Vec<UiMessage> = thread
                     .into_iter()
                     .filter_map(|msg: &Message| {
-                        let content = msg.text_content();
                         let role = match msg.role {
                             Role::User      => "user".to_string(),
                             Role::Assistant => "assistant".to_string(),
                             Role::System    => return None,
                         };
-                        Some(UiMessage { id: msg.id.clone(), role, content })
+                        let mut parts: Vec<String> = vec![];
+                        for block in &msg.content {
+                            match block {
+                                shared::ContentBlock::Text(t)   => parts.push(t.body.clone()),
+                                shared::ContentBlock::S3File(f) => {
+                                    parts.push(format!("[file: {}]", f.name))
+                                }
+                                _ => {}
+                            }
+                        }
+                        Some(UiMessage { id: msg.id.clone(), role, content: parts.join("\n") })
                     })
                     .collect();
                 set_messages.set(ui);
@@ -93,16 +107,11 @@ pub fn ChatPage() -> impl IntoView {
     let on_submit = move |ev: leptos::ev::SubmitEvent| {
         ev.prevent_default();
         let text = input_text.get_untracked().trim().to_string();
-        if text.is_empty() || is_streaming.get_untracked() { return; }
+        if text.is_empty() || is_streaming.get_untracked() || uploading.get_untracked() {
+            return;
+        }
 
         set_input_text.set(String::new());
-        set_messages.update(|v| {
-            v.push(UiMessage {
-                id:      generate_tmp_id(),
-                role:    "user".to_string(),
-                content: text.clone(),
-            });
-        });
         set_is_streaming.set(true);
         set_streaming.set(String::new());
 
@@ -116,14 +125,61 @@ pub fn ChatPage() -> impl IntoView {
             let current_conv_id = conversation_id.clone();
             let nav             = navigate.clone();
 
-            let request = SendMessageRequest {
-                content:         vec![ContentBlock::text(text)],
-                bot_id:          None,
-                conversation_id,
-                model_id,
-            };
-
             wasm_bindgen_futures::spawn_local(async move {
+                // ── Optional file upload ──────────────────────────────────────
+                let s3_block: Option<ContentBlock> = if let Some(input_el) = file_ref.get_untracked() {
+                    if let Some(file) = input_el.files().and_then(|fl| fl.get(0)) {
+                        set_uploading.set(true);
+                        let form_data = web_sys::FormData::new().unwrap();
+                        form_data.append_with_blob("file", &file).unwrap();
+                        let result = crate::api::upload_file(form_data, &token).await;
+                        set_uploading.set(false);
+                        match result {
+                            Ok(resp) => Some(ContentBlock::S3File(S3FileContent {
+                                key:        resp.key,
+                                media_type: resp.content_type,
+                                name:       resp.name,
+                            })),
+                            Err(e) => {
+                                leptos::logging::error!("upload error: {e}");
+                                None
+                            }
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                // ── Build display content ─────────────────────────────────────
+                let display = if let Some(ref sf) = s3_block {
+                    if let ContentBlock::S3File(f) = sf {
+                        format!("{text}\n[file: {}]", f.name)
+                    } else { text.clone() }
+                } else {
+                    text.clone()
+                };
+
+                set_messages.update(|v| {
+                    v.push(UiMessage {
+                        id:      generate_tmp_id(),
+                        role:    "user".to_string(),
+                        content: display,
+                    });
+                });
+
+                // ── Build request content ─────────────────────────────────────
+                let mut content = vec![ContentBlock::text(text)];
+                if let Some(block) = s3_block { content.push(block); }
+
+                let request = SendMessageRequest {
+                    content,
+                    bot_id:          None,
+                    conversation_id,
+                    model_id,
+                };
+
                 let result = crate::api::stream_chat(
                     request,
                     token,
@@ -243,6 +299,10 @@ pub fn ChatPage() -> impl IntoView {
                         </td>
                     </tr>
                     <tr>
+                        <td><label>"File"</label></td>
+                        <td><input type="file" node_ref=file_ref accept="image/*"/></td>
+                    </tr>
+                    <tr>
                         <td><label>"Message"</label></td>
                         <td>
                             <textarea rows="4"
@@ -255,8 +315,12 @@ pub fn ChatPage() -> impl IntoView {
                         <td></td>
                         <td>
                             <input type="submit"
-                                prop:value=move || if is_streaming.get() { "Sending…" } else { "Send" }
-                                prop:disabled=is_streaming
+                                prop:value=move || {
+                                    if uploading.get()    { "Uploading…" }
+                                    else if is_streaming.get() { "Sending…" }
+                                    else { "Send" }
+                                }
+                                prop:disabled=move || is_streaming.get() || uploading.get()
                             />
                         </td>
                     </tr>

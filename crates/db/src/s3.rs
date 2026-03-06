@@ -67,8 +67,28 @@ impl S3Store {
         }
     }
 
+    /// Upload raw bytes with an explicit content type.
+    pub async fn put_upload(&self, key: &str, data: Vec<u8>, content_type: &str) -> Result<(), DbError> {
+        debug!(key, bytes = data.len(), "S3 put upload");
+        self.client
+            .put_object()
+            .bucket(&self.bucket)
+            .key(key)
+            .body(Bytes::from(data).into())
+            .content_type(content_type)
+            .send()
+            .await
+            .map_err(|e| DbError::S3(e.to_string()))?;
+        Ok(())
+    }
+
     /// Build the S3 key for a conversation's message map.
     pub fn message_map_key(user_id: &str, conv_id: &str) -> String {
         format!("{user_id}/{conv_id}/messages.json")
+    }
+
+    /// Build the S3 key for a user upload.
+    pub fn upload_key(user_id: &str, uuid: &str, ext: &str) -> String {
+        format!("{user_id}/uploads/{uuid}.{ext}")
     }
 }

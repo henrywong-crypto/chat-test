@@ -29,6 +29,17 @@ pub struct ImageContent {
     pub data: String,
 }
 
+/// A reference to an image stored in S3 (resolved to `ImageContent` before Bedrock calls).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct S3FileContent {
+    /// S3 key, e.g. `"{user_id}/uploads/{uuid}.jpg"`.
+    pub key: String,
+    /// MIME type, e.g. `"image/jpeg"`.
+    pub media_type: String,
+    /// Original filename supplied by the uploader.
+    pub name: String,
+}
+
 /// A model requesting a tool call.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolUseContent {
@@ -63,6 +74,8 @@ pub struct ReasoningContent {
 pub enum ContentBlock {
     Text(TextContent),
     Image(ImageContent),
+    /// Image stored in S3; resolved to `Image` before Bedrock invocations.
+    S3File(S3FileContent),
     ToolUse(ToolUseContent),
     ToolResult(ToolResultContent),
     Reasoning(ReasoningContent),
@@ -183,6 +196,12 @@ pub struct ConversationMeta {
     /// Bot used for this conversation, if any.
     pub bot_id: Option<String>,
     pub user_id: String,
+    /// Unix timestamp when the last user message was sent (0.0 for old records).
+    #[serde(default)]
+    pub last_msg_time: f64,
+    /// Unix timestamp when the last assistant reply arrived (0.0 for old records).
+    #[serde(default)]
+    pub last_reply_time: f64,
 }
 
 /// Full conversation including every message.

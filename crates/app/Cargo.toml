@@ -53,6 +53,7 @@ web-sys              = { version = "0.3", optional = true, features = [
     "Response", "Headers",
     "AbortController", "AbortSignal",
     "EventSource", "MessageEvent",
+    "FormData", "File", "FileList", "Blob", "HtmlInputElement",
 ] }
 console_error_panic_hook = { version = "0.1", optional = true }
 getrandom                = { version = "0.2", optional = true, features = ["js"] }
@@ -103,7 +104,7 @@ required-features = ["ssr"]
 output-name      = "app"
 site-root        = "target/site"
 site-pkg-dir     = "pkg"
-style-file       = "style/main.scss"
+style-file       = "style/main.css"
 assets-dir       = "public"
 site-addr        = "0.0.0.0:3000"
 reload-port      = 3001

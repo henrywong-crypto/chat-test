@@ -123,6 +123,11 @@ fn convert_content_block(block: &ContentBlock) -> Result<AwsContentBlock, Bedroc
             // Reasoning blocks are model-generated; we don't send them back.
             Err(BedrockError::Conversion("cannot send Reasoning block to model".into()))
         }
+
+        ContentBlock::S3File(_) => {
+            // S3File blocks must be resolved to Image before reaching this point.
+            Err(BedrockError::Conversion("S3File block was not resolved before Bedrock call".into()))
+        }
     }
 }
 

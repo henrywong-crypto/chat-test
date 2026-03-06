@@ -23,6 +23,7 @@ use axum::{
     },
     Json,
 };
+use base64::Engine as _;
 use chrono::Utc;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -37,10 +38,11 @@ use bedrock::{
     cost::calculate_message_cost,
     stream::{stream_response, BedrockStreamEvent},
 };
+use db::S3Store;
 use shared::{
     api::{SendMessageRequest, StreamEvent},
-    ContentBlock, Conversation, ConversationMeta, Message, Role, TextContent, TokenUsage,
-    ToolUseContent,
+    ContentBlock, Conversation, ConversationMeta, ImageContent, Message, Role, TextContent,
+    TokenUsage, ToolUseContent,
 };
 
 use crate::server::state::AppState;
@@ -126,6 +128,7 @@ async fn run_chat(
     if let Some(parent) = conv.message_map.get_mut(&conv.last_message_id) {
         parent.children_message_ids.push(user_msg_id.clone());
     }
+    let user_msg_create_time = user_msg.create_time;
     conv.message_map.insert(user_msg_id.clone(), user_msg);
     conv.last_message_id = user_msg_id.clone();
 
@@ -139,10 +142,18 @@ async fn run_chat(
 
     // ── 5. Build Bedrock ConverseRequest ──────────────────────────────────────
     let gen_params = bot_gen_params.unwrap_or_default();
-    let thread = conv.active_thread();
-    let aws_messages = convert_messages(
-        &thread.iter().map(|m| (*m).clone()).collect::<Vec<_>>(),
-    ).map_err(|e| anyhow::anyhow!("convert messages: {e}"))?;
+    let raw_thread = conv.active_thread();
+
+    // Resolve any S3File blocks in the thread to base64 Image blocks.
+    let mut resolved: Vec<Message> = Vec::with_capacity(raw_thread.len());
+    for msg in &raw_thread {
+        let mut m = (*msg).clone();
+        m.content = resolve_s3_files(&m.content, &state.s3).await;
+        resolved.push(m);
+    }
+
+    let aws_messages = convert_messages(&resolved)
+        .map_err(|e| anyhow::anyhow!("convert messages: {e}"))?;
 
     let converse_req = ConverseRequest {
         model_arn,
@@ -211,8 +222,12 @@ async fn run_chat(
                     if let Some(um) = conv.message_map.get_mut(&user_msg_id) {
                         um.children_message_ids.push(asst_msg_id.clone());
                     }
-                    conv.message_map.insert(asst_msg_id.clone(), asst_msg);
+                    conv.message_map.insert(asst_msg_id.clone(), asst_msg.clone());
                     conv.last_message_id = asst_msg_id.clone();
+
+                    // Record timestamps for list view.
+                    conv.meta.last_msg_time   = user_msg_create_time;
+                    conv.meta.last_reply_time = asst_msg.create_time;
 
                     // Accumulate cost.
                     let cost = calculate_message_cost(&model_id, &usage, &state.aws_region);
@@ -270,12 +285,14 @@ fn new_conversation(user_id: &str, bot_id: Option<&str>) -> Conversation {
 
     Conversation {
         meta: ConversationMeta {
-            id:          conv_id,
-            title:       "New conversation".into(),
-            create_time: now,
-            total_price: 0.0,
-            bot_id:      bot_id.map(|s| s.to_string()),
-            user_id:     user_id.to_string(),
+            id:              conv_id,
+            title:           "New conversation".into(),
+            create_time:     now,
+            total_price:     0.0,
+            bot_id:          bot_id.map(|s| s.to_string()),
+            user_id:         user_id.to_string(),
+            last_msg_time:   0.0,
+            last_reply_time: 0.0,
         },
         last_message_id: root_id,
         message_map,
@@ -293,4 +310,29 @@ fn error_event(msg: &str) -> Event {
 
 fn unix_now() -> f64 {
     Utc::now().timestamp_millis() as f64 / 1000.0
+}
+
+/// Resolve `S3File` blocks by downloading bytes from S3 and converting to
+/// base-64 `Image` blocks.  Other blocks are passed through unchanged.
+async fn resolve_s3_files(blocks: &[ContentBlock], s3: &S3Store) -> Vec<ContentBlock> {
+    let mut out = Vec::with_capacity(blocks.len());
+    for block in blocks {
+        if let ContentBlock::S3File(sf) = block {
+            match s3.get_bytes(&sf.key).await {
+                Ok(bytes) => {
+                    let data = base64::engine::general_purpose::STANDARD.encode(&bytes);
+                    out.push(ContentBlock::Image(ImageContent {
+                        media_type: sf.media_type.clone(),
+                        data,
+                    }));
+                }
+                Err(e) => {
+                    warn!(key = sf.key, error = %e, "failed to resolve S3File block; skipping");
+                }
+            }
+        } else {
+            out.push(block.clone());
+        }
+    }
+    out
 }

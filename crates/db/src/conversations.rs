@@ -44,6 +44,10 @@ struct ConvRecord {
     bot_id: Option<String>,
     #[serde(rename = "lastMessageId")]
     last_message_id: String,
+    #[serde(rename = "lastMsgTime", default)]
+    last_msg_time: f64,
+    #[serde(rename = "lastReplyTime", default)]
+    last_reply_time: f64,
     /// JSON-encoded message map (absent when offloaded to S3).
     #[serde(rename = "messageMapJson", skip_serializing_if = "Option::is_none")]
     message_map_json: Option<String>,
@@ -82,7 +86,7 @@ impl ConversationRepository {
                 .expression_attribute_values(":uid", AttributeValue::S(user_id.to_string()))
                 // Fetch only the metadata columns (skip the large message map).
                 .projection_expression(
-                    "userId, conversationId, title, createTime, totalPrice, botId, lastMessageId"
+                    "userId, conversationId, title, createTime, totalPrice, botId, lastMessageId, lastMsgTime, lastReplyTime"
                 )
                 .scan_index_forward(false); // newest first
 
@@ -147,6 +151,8 @@ impl ConversationRepository {
             total_price:      conv.meta.total_price,
             bot_id:           conv.meta.bot_id.clone(),
             last_message_id:  conv.last_message_id.clone(),
+            last_msg_time:    conv.meta.last_msg_time,
+            last_reply_time:  conv.meta.last_reply_time,
             message_map_json: message_map_json_field,
             s3_key:           s3_key_field,
         };
@@ -227,11 +233,13 @@ impl ConversationRepository {
 
 fn conv_record_to_meta(rec: ConvRecord) -> ConversationMeta {
     ConversationMeta {
-        id:           rec.conversation_id,
-        title:        rec.title,
-        create_time:  rec.create_time,
-        total_price:  rec.total_price,
-        bot_id:       rec.bot_id,
-        user_id:      rec.user_id,
+        id:             rec.conversation_id,
+        title:          rec.title,
+        create_time:    rec.create_time,
+        total_price:    rec.total_price,
+        bot_id:         rec.bot_id,
+        user_id:        rec.user_id,
+        last_msg_time:  rec.last_msg_time,
+        last_reply_time: rec.last_reply_time,
     }
 }

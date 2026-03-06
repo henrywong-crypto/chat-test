@@ -10,7 +10,7 @@ use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
 use crate::app::App;
 use super::{
-    handlers::{admin, bots, chat, conversations, profiles},
+    handlers::{admin, bots, chat, conversations, profiles, uploads},
     state::AppState,
 };
 
@@ -23,6 +23,8 @@ pub async fn build_router(state: AppState) -> Router {
     let api = Router::new()
         // Chat
         .route("/chat", post(chat::chat_stream))
+        // Upload
+        .route("/upload", post(uploads::upload_file))
         // Conversations
         .route("/conversations",              get(conversations::list_conversations))
         .route("/conversations/:id",          get(conversations::get_conversation))

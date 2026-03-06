@@ -131,6 +131,50 @@ pub async fn stream_chat(
     Ok(())
 }
 
+// ── Upload ────────────────────────────────────────────────────────────────────
+
+/// Upload a file to S3 via `POST /api/upload` (multipart).
+///
+/// The caller builds a `FormData` with a field named `"file"` and passes the
+/// auth token.  Returns the S3 key, content type, and original filename.
+#[cfg(feature = "hydrate")]
+pub async fn upload_file(
+    form_data: web_sys::FormData,
+    token: &str,
+) -> Result<shared::api::UploadResponse, String> {
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_futures::JsFuture;
+    use web_sys::{Headers, RequestInit};
+
+    let window = web_sys::window().ok_or("no window")?;
+
+    let headers = Headers::new().map_err(|e| format!("{e:?}"))?;
+    headers
+        .set("Authorization", &format!("Bearer {token}"))
+        .map_err(|e| format!("{e:?}"))?;
+    // Do NOT set Content-Type here — the browser must set it with the boundary.
+
+    let opts = RequestInit::new();
+    opts.set_method("POST");
+    opts.set_headers(&headers);
+    opts.set_body(&form_data);
+
+    let req = web_sys::Request::new_with_str_and_init("/api/upload", &opts)
+        .map_err(|e| format!("{e:?}"))?;
+
+    let resp_val = JsFuture::from(window.fetch_with_request(&req))
+        .await
+        .map_err(|e| format!("{e:?}"))?;
+    let response: web_sys::Response = resp_val.dyn_into().map_err(|e| format!("{e:?}"))?;
+
+    if !response.ok() {
+        return Err(format!("HTTP {}", response.status()));
+    }
+
+    let text = get_text(&response).await?;
+    serde_json::from_str(&text).map_err(|e| e.to_string())
+}
+
 // ── Private helpers ───────────────────────────────────────────────────────────
 
 #[cfg(feature = "hydrate")]

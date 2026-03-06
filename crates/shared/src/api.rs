@@ -50,6 +50,14 @@ pub enum StreamEvent {
     Error { message: String },
 }
 
+/// POST /api/upload  (multipart form; field name "file")
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UploadResponse {
+    pub key:          String,
+    pub content_type: String,
+    pub name:         String,
+}
+
 // ── Conversations ─────────────────────────────────────────────────────────────
 
 /// GET /api/conversations
