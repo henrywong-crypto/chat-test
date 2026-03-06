@@ -1,0 +1,91 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockInference",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": "arn:aws:bedrock:*::foundation-model/*"
+    },
+    {
+      "Sid": "BedrockInferenceProfiles",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:CreateInferenceProfile",
+        "bedrock:GetInferenceProfile",
+        "bedrock:ListInferenceProfiles",
+        "bedrock:DeleteInferenceProfile",
+        "bedrock:TagResource",
+        "bedrock:UntagResource",
+        "bedrock:ListTagsForResource"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:*:*:inference-profile/*",
+        "arn:aws:bedrock:*::foundation-model/*"
+      ]
+    },
+    {
+      "Sid": "BedrockListModels",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:ListFoundationModels",
+        "bedrock:GetFoundationModel",
+        "bedrock:ListCrossRegionInferenceProfiles"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DynamoDBTables",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:*:*:table/bedrock-rs-conversations",
+        "arn:aws:dynamodb:*:*:table/bedrock-rs-conversations/index/*",
+        "arn:aws:dynamodb:*:*:table/bedrock-rs-bots",
+        "arn:aws:dynamodb:*:*:table/bedrock-rs-bots/index/*",
+        "arn:aws:dynamodb:*:*:table/bedrock-rs-inference-profiles",
+        "arn:aws:dynamodb:*:*:table/bedrock-rs-inference-profiles/index/*"
+      ]
+    },
+    {
+      "Sid": "S3LargeMessages",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::bedrock-rs-messages-*",
+        "arn:aws:s3:::bedrock-rs-messages-*/*"
+      ]
+    },
+    {
+      "Sid": "CognitoUserManagement",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:ListUsers",
+        "cognito-idp:AdminGetUser",
+        "cognito-idp:AdminListGroupsForUser",
+        "cognito-idp:AdminAddUserToGroup",
+        "cognito-idp:AdminRemoveUserFromGroup",
+        "cognito-idp:AdminEnableUser",
+        "cognito-idp:AdminDisableUser"
+      ],
+      "Resource": "arn:aws:cognito-idp:*:*:userpool/*"
+    }
+  ]
+}

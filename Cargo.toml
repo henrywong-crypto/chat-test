@@ -1,0 +1,79 @@
+[workspace]
+members = [
+    "crates/app",
+    "crates/shared",
+    "crates/auth",
+    "crates/bedrock",
+    "crates/db",
+]
+resolver = "2"
+
+[workspace.dependencies]
+# Internal crates
+shared  = { path = "crates/shared" }
+auth    = { path = "crates/auth" }
+bedrock = { path = "crates/bedrock" }
+db      = { path = "crates/db" }
+
+# Leptos
+leptos        = { version = "0.7", features = [] }
+leptos_meta   = { version = "0.7", features = [] }
+leptos_router = { version = "0.7", features = [] }
+leptos_axum   = { version = "0.7" }
+
+# Axum / Tower
+axum        = { version = "0.7", features = ["macros"] }
+axum-extra  = { version = "0.9", features = ["typed-header"] }
+tower       = { version = "0.4", features = ["full"] }
+tower-http  = { version = "0.5", features = ["cors", "trace", "compression-full", "timeout"] }
+
+# Async
+tokio        = { version = "1", features = ["full"] }
+tokio-stream = { version = "0.1" }
+futures      = { version = "0.3" }
+
+# Serde
+serde      = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+
+# AWS
+aws-config                       = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-bedrockruntime           = { version = "1" }
+aws-sdk-bedrock                  = { version = "1" }
+aws-sdk-dynamodb                 = { version = "1" }
+aws-sdk-s3                       = { version = "1" }
+aws-sdk-cognitoidentityprovider  = { version = "1" }
+
+# Auth
+jsonwebtoken = { version = "9" }
+reqwest      = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# Error handling
+thiserror = { version = "1" }
+anyhow    = { version = "1" }
+
+# Tracing
+tracing            = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Utils
+chrono      = { version = "0.4", features = ["serde"] }
+uuid        = { version = "1", features = ["v4", "serde"] }
+serde_dynamo = { version = "4", features = ["aws-sdk-dynamodb+1"] }
+envy        = { version = "0.4" }
+bytes       = { version = "1" }
+async-trait = { version = "0.1" }
+base64      = { version = "0.22" }
+aws-smithy-types = { version = "1" }
+pulldown-cmark = { version = "0.12" }
+js-sys         = { version = "0.3" }
+wasm-bindgen-futures = { version = "0.4" }
+
+# ── Release profile ───────────────────────────────────────────────────────────
+# Applied to both the SSR server binary and the WASM bundle.
+[profile.release]
+opt-level     = 3        # Maximum optimization
+lto           = "thin"   # Cross-crate link-time optimization (balanced speed/size)
+codegen-units = 1        # Single codegen unit — slower compile, faster runtime
+strip         = "debuginfo"  # Remove debug symbols from the binary
+panic         = "abort"  # Smaller binary; abort on panic instead of unwind

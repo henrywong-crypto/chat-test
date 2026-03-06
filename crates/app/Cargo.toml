@@ -1,0 +1,114 @@
+[package]
+name    = "app"
+version = "0.1.0"
+edition = "2021"
+
+# Both cdylib (WASM) and rlib (server can link it too)
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+shared         = { workspace = true }
+leptos         = { workspace = true, features = [] }
+leptos_meta    = { workspace = true, features = [] }
+leptos_router  = { workspace = true, features = [] }
+serde          = { workspace = true }
+serde_json     = { workspace = true }
+tracing        = { workspace = true }
+thiserror      = { workspace = true }
+anyhow         = { workspace = true }
+pulldown-cmark = { workspace = true }
+base64         = { workspace = true }
+
+# SSR-only
+axum          = { workspace = true, optional = true }
+leptos_axum   = { workspace = true, optional = true }
+tokio         = { workspace = true, optional = true }
+tokio-stream  = { workspace = true, optional = true }
+futures       = { workspace = true, optional = true }
+tower         = { workspace = true, optional = true }
+tower-http    = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true }
+auth          = { workspace = true, optional = true }
+bedrock       = { workspace = true, optional = true }
+db            = { workspace = true, optional = true }
+aws-config    = { workspace = true, optional = true }
+aws-sdk-bedrockruntime          = { workspace = true, optional = true }
+aws-sdk-bedrock                 = { workspace = true, optional = true }
+aws-sdk-dynamodb                = { workspace = true, optional = true }
+aws-sdk-s3                      = { workspace = true, optional = true }
+aws-sdk-cognitoidentityprovider = { workspace = true, optional = true }
+envy          = { workspace = true, optional = true }
+uuid          = { workspace = true, optional = true }
+chrono        = { workspace = true, optional = true }
+
+# Hydrate-only (WASM client)
+wasm-bindgen         = { version = "0.2", optional = true }
+wasm-bindgen-futures = { workspace = true, optional = true }
+js-sys               = { workspace = true, optional = true }
+web-sys              = { version = "0.3", optional = true, features = [
+    "Window", "Document", "HtmlElement", "Storage",
+    "Request", "RequestInit", "RequestMode",
+    "ReadableStream", "ReadableStreamDefaultReader",
+    "Response", "Headers",
+    "AbortController", "AbortSignal",
+    "EventSource", "MessageEvent",
+] }
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[features]
+default = []
+
+ssr = [
+    "leptos/ssr",
+    "dep:axum",
+    "dep:leptos_axum",
+    "dep:tokio",
+    "dep:tokio-stream",
+    "dep:futures",
+    "dep:tower",
+    "dep:tower-http",
+    "dep:tracing-subscriber",
+    "dep:auth",
+    "dep:bedrock",
+    "dep:db",
+    "dep:aws-config",
+    "dep:aws-sdk-bedrockruntime",
+    "dep:aws-sdk-bedrock",
+    "dep:aws-sdk-dynamodb",
+    "dep:aws-sdk-s3",
+    "dep:aws-sdk-cognitoidentityprovider",
+    "dep:envy",
+    "dep:uuid",
+    "dep:chrono",
+]
+
+hydrate = [
+    "leptos/hydrate",
+    "dep:wasm-bindgen",
+    "dep:wasm-bindgen-futures",
+    "dep:js-sys",
+    "dep:web-sys",
+    "dep:console_error_panic_hook",
+]
+
+[[bin]]
+name             = "server"
+path             = "src/main.rs"
+required-features = ["ssr"]
+
+[package.metadata.leptos]
+output-name      = "app"
+site-root        = "target/site"
+site-pkg-dir     = "pkg"
+style-file       = "style/main.scss"
+assets-dir       = "public"
+site-addr        = "127.0.0.1:3000"
+reload-port      = 3001
+browserquery     = "defaults"
+env              = "DEV"
+bin-features     = ["ssr"]
+bin-default-features = false
+lib-features     = ["hydrate"]
+lib-default-features = false
+watch-additional-files = ["style"]

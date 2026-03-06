@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/* CSS custom properties                                                */
+/* ------------------------------------------------------------------ */
+:root {
+  --sidebar-width: 260px;
+  --app-text-scale: 1;
+
+  /* Transition speeds */
+  --transition-fast:   150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   300ms ease;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base resets                                                           */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    font-size: calc(16px * var(--app-text-scale));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+    @apply font-sans;
+  }
+
+  /* Scrollbar — webkit */
+  ::-webkit-scrollbar            { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track      { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb      { @apply bg-gray-300 dark:bg-gray-700 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-gray-600; }
+
+  /* Focus ring */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-blue-500;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout utilities                                                      */
+/* ------------------------------------------------------------------ */
+@layer components {
+  /* App shell */
+  .app-shell {
+    @apply flex h-screen w-screen overflow-hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: var(--sidebar-width);
+    @apply flex flex-col flex-shrink-0 overflow-hidden
+           bg-gray-50 dark:bg-gray-900
+           border-r border-gray-200 dark:border-gray-800;
+    transition: width var(--transition-normal);
+  }
+  .sidebar.collapsed {
+    width: 0;
+  }
+
+  /* Main content */
+  .main-content {
+    @apply flex flex-col flex-1 min-w-0 overflow-hidden;
+  }
+
+  /* Topbar / Navbar */
+  .navbar {
+    @apply flex items-center justify-between h-14 px-4 flex-shrink-0
+           border-b border-gray-200 dark:border-gray-800
+           bg-white dark:bg-gray-950;
+  }
+
+  /* Chat viewport */
+  .chat-viewport {
+    @apply flex flex-col flex-1 overflow-y-auto;
+  }
+
+  /* Message bubbles */
+  .message-user {
+    @apply ml-auto max-w-[80%] rounded-2xl px-4 py-3
+           bg-blue-600 text-white;
+  }
+  .message-assistant {
+    @apply mr-auto max-w-[80%];
+  }
+
+  /* Input area */
+  .input-area {
+    @apply sticky bottom-0 px-4 pb-4 pt-2
+           bg-white dark:bg-gray-950;
+  }
+  .input-box {
+    @apply flex items-end gap-2 rounded-2xl border border-gray-300 dark:border-gray-700
+           bg-white dark:bg-gray-900 px-4 py-3
+           focus-within:border-blue-500 dark:focus-within:border-blue-400
+           transition-colors;
+  }
+  .input-textarea {
+    @apply flex-1 resize-none bg-transparent outline-none
+           text-sm leading-relaxed max-h-48 overflow-y-auto;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2
+           rounded-lg px-3 py-2 text-sm font-medium
+           transition-colors select-none cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700
+           active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply btn text-gray-700 dark:text-gray-300
+           hover:bg-gray-100 dark:hover:bg-gray-800;
+  }
+  .btn-icon {
+    @apply btn p-2 rounded-lg;
+  }
+
+  /* Sidebar conversation item */
+  .conv-item {
+    @apply group flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer
+           text-sm text-gray-700 dark:text-gray-300
+           hover:bg-gray-200 dark:hover:bg-gray-800
+           transition-colors;
+  }
+  .conv-item.active {
+    @apply bg-gray-200 dark:bg-gray-800 font-medium;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center
+           bg-black/50 backdrop-blur-sm;
+  }
+  .modal-panel {
+    @apply relative w-full max-w-2xl max-h-[90vh] overflow-hidden
+           rounded-2xl bg-white dark:bg-gray-900
+           shadow-2xl flex flex-col;
+  }
+
+  /* Toast */
+  .toast-container {
+    @apply fixed bottom-4 right-4 z-[100] flex flex-col gap-2;
+  }
+  .toast {
+    @apply flex items-center gap-3 rounded-xl px-4 py-3
+           shadow-lg text-sm font-medium min-w-[280px]
+           bg-white dark:bg-gray-800
+           border border-gray-200 dark:border-gray-700;
+  }
+  .toast-success { @apply border-l-4 border-l-green-500; }
+  .toast-error   { @apply border-l-4 border-l-red-500; }
+  .toast-warning { @apply border-l-4 border-l-yellow-500; }
+  .toast-info    { @apply border-l-4 border-l-blue-500; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Markdown / prose overrides                                           */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .prose-chat {
+    @apply prose prose-sm dark:prose-invert max-w-none;
+  }
+  .prose-chat pre {
+    @apply relative rounded-xl bg-gray-900 dark:bg-gray-950 p-4 overflow-x-auto;
+  }
+  .prose-chat code:not(pre code) {
+    @apply rounded px-1 py-0.5
+           bg-gray-100 dark:bg-gray-800
+           text-gray-800 dark:text-gray-200
+           font-mono text-[0.85em]
+           before:content-none after:content-none;
+  }
+  .prose-chat a {
+    @apply text-blue-600 dark:text-blue-400 no-underline hover:underline;
+  }
+
+  /* Code copy button (injected by JS) */
+  .code-copy-btn {
+    @apply absolute top-2 right-2
+           btn-ghost btn-icon text-xs
+           text-gray-400 hover:text-gray-200
+           opacity-0 group-hover:opacity-100 transition-opacity;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Animations                                                           */
+/* ------------------------------------------------------------------ */
+@layer utilities {
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+  .cursor-blink {
+    @apply inline-block w-0.5 h-4 bg-current ml-0.5 align-middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up {
+    animation: slide-up 200ms ease forwards;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .animate-fade-in {
+    animation: fade-in 150ms ease forwards;
+  }
+}

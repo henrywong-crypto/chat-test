@@ -1,0 +1,27 @@
+### bedrock-rs gitignore
+
+# Build artefacts
+/target/
+/node_modules/
+
+# Environment — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# cargo-leptos output (regenerated on build)
+/target/site/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Nix
+.direnv/
+result
+result-*

@@ -1,0 +1,34 @@
+# Rust build artefacts (large — exclude from Docker build context)
+/target/
+
+# Node modules
+/node_modules/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Dev tooling / IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Nix
+.direnv/
+result
+
+# Git
+.git/
+.github/
+
+# Cargo lock is intentionally kept (deterministic builds)
+# Cargo.lock  ← do NOT ignore
+
+# Docs / markdown (not needed at runtime)
+*.md
+LICENSE
+
+# Infra source (not needed in app container)
+/infra/

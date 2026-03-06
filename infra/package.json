@@ -1,0 +1,22 @@
+{
+  "name": "bedrock-rs-infra",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build":   "tsc",
+    "watch":   "tsc -w",
+    "cdk":     "cdk",
+    "deploy":  "cdk deploy",
+    "diff":    "cdk diff",
+    "synth":   "cdk synth"
+  },
+  "dependencies": {
+    "aws-cdk-lib":     "^2.170.0",
+    "constructs":      "^10.0.0"
+  },
+  "devDependencies": {
+    "aws-cdk":         "^2.170.0",
+    "typescript":      "~5.5.0",
+    "@types/node":     "^22.0.0"
+  }
+}
