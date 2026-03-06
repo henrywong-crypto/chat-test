@@ -116,7 +116,7 @@ pub fn pagination_nav(pagination: &Pagination) -> AnyView {
             pagination.current_page - 1,
             pagination.extra_params
         );
-        Either::Left(view! { <a href={href} class="btn btn-secondary btn-sm">"← Previous"</a> })
+        Either::Left(view! { <a href={href}>"← Previous"</a> })
     } else {
         Either::Right(())
     };
@@ -127,17 +127,13 @@ pub fn pagination_nav(pagination: &Pagination) -> AnyView {
             pagination.current_page + 1,
             pagination.extra_params
         );
-        Either::Left(view! { <a href={href} class="btn btn-secondary btn-sm">"Next →"</a> })
+        Either::Left(view! { <a href={href}>"Next →"</a> })
     } else {
         Either::Right(())
     };
 
     view! {
-        <div class="pagination-nav">
-            <span class="pagination-info">{info}</span>
-            {prev}
-            {next}
-        </div>
+        <p class="pagination-nav">{info}" "{prev}" "{next}</p>
     }
     .into_any()
 }
@@ -171,58 +167,35 @@ impl<C: IntoView + 'static> Page<C> {
         let Page { title, breadcrumbs, nav_links, info_rows, content, subpages } = self;
 
         view! {
-            <div class="page-content">
-                // ── Header ────────────────────────────────────────────────────
-                <div class="page-header">
-                    {if breadcrumbs.is_empty() {
-                        Either::Left(view! {
-                            <h1 class="page-title">{title}</h1>
-                        })
-                    } else {
-                        Either::Right(view! {
-                            <h1 class="page-title page-breadcrumb">
-                                {breadcrumbs.into_iter().enumerate().map(|(index, crumb)| {
-                                    let sep = if index > 0 {
-                                        Either::Left(view! { <span class="breadcrumb-sep">" / "</span> })
-                                    } else {
-                                        Either::Right(())
-                                    };
-                                    match crumb.href {
-                                        Some(href) => Either::Left(view! {
-                                            {sep}<a href={href} class="breadcrumb-link">{crumb.label}</a>
-                                        }),
-                                        None => Either::Right(view! {
-                                            {sep}<span class="breadcrumb-current">{crumb.label}</span>
-                                        }),
-                                    }
-                                }).collect::<Vec<_>>()}
-                            </h1>
-                        })
-                    }}
-
-                    // Nav links rendered as action buttons in the header
-                    {if !nav_links.is_empty() {
-                        Either::Left(view! {
-                            <div class="page-actions">
-                                {nav_links.into_iter().map(|link| view! {
-                                    <a href={link.href} class="btn btn-secondary btn-sm">{link.label}</a>
-                                }).collect::<Vec<_>>()}
-                            </div>
-                        })
-                    } else {
-                        Either::Right(())
-                    }}
-                </div>
-
-                // ── Info rows ─────────────────────────────────────────────────
-                {if !info_rows.is_empty() {
+            <div class="hub-page">
+                // ── Breadcrumb h1 ─────────────────────────────────────────────
+                {if !breadcrumbs.is_empty() {
                     Either::Left(view! {
-                        <table class="info-table">
-                            {info_rows.into_iter().map(|row| view! {
-                                <tr>
-                                    <th>{row.label}</th>
-                                    <td>{row.value}</td>
-                                </tr>
+                        <h1>
+                            {breadcrumbs.into_iter().enumerate().map(|(index, crumb)| {
+                                let sep = if index > 0 { " / " } else { "" };
+                                match crumb.href {
+                                    Some(href) => Either::Left(view! {
+                                        {sep}<a href={href}>{crumb.label}</a>
+                                    }),
+                                    None => Either::Right(view! {
+                                        {sep}{crumb.label}
+                                    }),
+                                }
+                            }).collect::<Vec<_>>()}
+                        </h1>
+                    })
+                } else {
+                    Either::Right(view! { <h1>{title}</h1> })
+                }}
+
+                // ── Navigation ────────────────────────────────────────────────
+                {if !nav_links.is_empty() {
+                    Either::Left(view! {
+                        <h2>"Navigation"</h2>
+                        <table>
+                            {nav_links.into_iter().map(|link| view! {
+                                <tr><td><a href={link.href}>{link.label}</a></td></tr>
                             }).collect::<Vec<_>>()}
                         </table>
                     })
@@ -230,20 +203,36 @@ impl<C: IntoView + 'static> Page<C> {
                     Either::Right(())
                 }}
 
-                // ── Main content ──────────────────────────────────────────────
+                // ── Info ──────────────────────────────────────────────────────
+                {if !info_rows.is_empty() {
+                    Either::Left(view! {
+                        <h2>"Info"</h2>
+                        <table>
+                            {info_rows.into_iter().map(|row| view! {
+                                <tr><td>{row.label}</td><td>{row.value}</td></tr>
+                            }).collect::<Vec<_>>()}
+                        </table>
+                    })
+                } else {
+                    Either::Right(())
+                }}
+
+                // ── Content ───────────────────────────────────────────────────
                 {content}
 
                 // ── Subpages ──────────────────────────────────────────────────
                 {if !subpages.is_empty() {
                     Either::Left(view! {
-                        <div class="subpages-grid">
+                        <h2>"Subpages"</h2>
+                        <table>
+                            <tr><th>"Page"</th><th>"Count"</th></tr>
                             {subpages.into_iter().map(|sub| view! {
-                                <a href={sub.href} class="subpage-card">
-                                    <span class="subpage-label">{sub.label}</span>
-                                    <span class="subpage-count">{sub.count}</span>
-                                </a>
+                                <tr>
+                                    <td><a href={sub.href}>{sub.label}</a></td>
+                                    <td>{sub.count}</td>
+                                </tr>
                             }).collect::<Vec<_>>()}
-                        </div>
+                        </table>
                     })
                 } else {
                     Either::Right(())

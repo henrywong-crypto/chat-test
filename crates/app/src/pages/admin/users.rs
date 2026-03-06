@@ -34,39 +34,32 @@ pub fn AdminUsersPage() -> impl IntoView {
     let users_table = view! {
         <Show
             when=is_admin
-            fallback=|| view! { <p class="admin-denied">"Access denied — admin only."</p> }
+            fallback=|| view! { <p>"Access denied — admin only."</p> }
         >
             {move || {
                 users.get().map(|wrap| {
                     let list = (*wrap).clone();
                     if list.is_empty() {
-                        view! {
-                            <div class="empty-state">
-                                <h2>"No users"</h2>
-                                <p>"No users found in the Cognito pool."</p>
-                            </div>
-                        }.into_any()
+                        view! { <p>"No users found in the Cognito pool."</p> }.into_any()
                     } else {
                         view! {
-                            <div class="admin-table-wrap">
-                                <table class="admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>"Email"</th>
-                                            <th>"ID"</th>
-                                            <th class="center">"Admin"</th>
-                                            <th class="center">"Create Bots"</th>
-                                            <th class="center">"Publish"</th>
-                                            <th class="center">"Status"</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {list.into_iter().map(|user: AdminUserRecord| {
-                                            view! { <UserRow user=user version=version /> }
-                                        }).collect_view()}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>"Email"</th>
+                                        <th>"ID"</th>
+                                        <th>"Admin"</th>
+                                        <th>"Create Bots"</th>
+                                        <th>"Publish"</th>
+                                        <th>"Status"</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {list.into_iter().map(|user: AdminUserRecord| {
+                                        view! { <UserRow user=user version=version /> }
+                                    }).collect_view()}
+                                </tbody>
+                            </table>
                         }.into_any()
                     }
                 })
@@ -151,36 +144,18 @@ fn UserRow(user: AdminUserRecord, version: RwSignal<u32>) -> impl IntoView {
 
     view! {
         <tr>
-            <td class="email-cell">{email}</td>
-            <td class="mono truncate id-cell">{user.id}</td>
-            <td class="center">
-                <input
-                    type="checkbox"
-                    prop:checked=admin_sig
-                    on:change=toggle_admin
-                />
+            <td>{email}</td>
+            <td>{user.id}</td>
+            <td>
+                <input type="checkbox" prop:checked=admin_sig   on:change=toggle_admin   />
             </td>
-            <td class="center">
-                <input
-                    type="checkbox"
-                    prop:checked=bots_sig
-                    on:change=toggle_bots
-                />
+            <td>
+                <input type="checkbox" prop:checked=bots_sig    on:change=toggle_bots    />
             </td>
-            <td class="center">
-                <input
-                    type="checkbox"
-                    prop:checked=publish_sig
-                    on:change=toggle_publish
-                />
+            <td>
+                <input type="checkbox" prop:checked=publish_sig on:change=toggle_publish />
             </td>
-            <td class="center">
-                {if enabled {
-                    view! { <span class="badge badge-active">"Active"</span> }.into_any()
-                } else {
-                    view! { <span class="badge badge-inactive">"Disabled"</span> }.into_any()
-                }}
-            </td>
+            <td>{if enabled { "Active" } else { "Disabled" }}</td>
         </tr>
     }
 }

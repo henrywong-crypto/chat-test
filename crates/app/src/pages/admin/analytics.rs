@@ -1,5 +1,5 @@
 /// Admin analytics page — `/admin/analytics`.
-/// Shows usage summary cards, a CSS bar chart by model, and a top-users table.
+/// Shows usage summary, model usage, and top-users tables.
 
 use leptos::prelude::*;
 use shared::UsageAnalyticsResponse;
@@ -29,15 +29,13 @@ pub fn AdminAnalyticsPage() -> impl IntoView {
     let dashboard = view! {
         <Show
             when=is_admin
-            fallback=|| view! { <p class="admin-denied">"Access denied — admin only."</p> }
+            fallback=|| view! { <p>"Access denied — admin only."</p> }
         >
             {move || {
                 analytics.get().map(|wrap| {
                     match (*wrap).clone() {
-                        None => view! {
-                            <p class="text-muted">"No analytics data available."</p>
-                        }.into_any(),
-                        Some(data) => view! { <AnalyticsDashboard data=data /> }.into_any(),
+                        None    => view! { <p>"No analytics data available."</p> }.into_any(),
+                        Some(d) => view! { <AnalyticsDashboard data=d /> }.into_any(),
                     }
                 })
             }}
@@ -61,102 +59,72 @@ pub fn AdminAnalyticsPage() -> impl IntoView {
 fn AnalyticsDashboard(data: UsageAnalyticsResponse) -> impl IntoView {
     let total_tokens = data.total_input_tokens + data.total_output_tokens;
 
-    // CSS bar chart: find max tokens across all models for scaling.
-    let max_tokens = data.by_model.iter()
-        .map(|m| m.input_tokens + m.output_tokens)
-        .max()
-        .unwrap_or(1)
-        .max(1);
+    // Summary info table
+    let summary = view! {
+        <h2>"Summary"</h2>
+        <table>
+            <tr><td>"Conversations"</td><td>{data.total_conversations.to_string()}</td></tr>
+            <tr><td>"Total tokens"</td><td>{format_number(total_tokens)}</td></tr>
+            <tr><td>"Input / Output"</td>
+                <td>{format_number(data.total_input_tokens)}" / "{format_number(data.total_output_tokens)}</td>
+            </tr>
+            <tr><td>"Estimated cost"</td><td>{format!("${:.4}", data.estimated_cost_usd)}</td></tr>
+        </table>
+    };
+
+    // Model usage table
+    let models = (!data.by_model.is_empty()).then(|| {
+        let rows = data.by_model.clone().into_iter().map(|m| {
+            let tokens = m.input_tokens + m.output_tokens;
+            view! {
+                <tr>
+                    <td>{m.model_id}</td>
+                    <td>{format_number(tokens)}</td>
+                    <td>{format!("${:.4}", m.total_cost)}</td>
+                </tr>
+            }
+        }).collect_view();
+        view! {
+            <h2>"Usage by Model"</h2>
+            <table>
+                <tr><th>"Model"</th><th>"Tokens"</th><th>"Cost"</th></tr>
+                {rows}
+            </table>
+        }
+    });
+
+    // Top users table
+    let top_users = (!data.top_users.is_empty()).then(|| {
+        let rows = data.top_users.clone().into_iter().enumerate().map(|(i, u)| {
+            view! {
+                <tr>
+                    <td>{(i + 1).to_string()}</td>
+                    <td>{u.email}</td>
+                    <td>{u.user_id}</td>
+                    <td>{format_number(u.total_tokens)}</td>
+                    <td>{format!("${:.4}", u.total_cost)}</td>
+                </tr>
+            }
+        }).collect_view();
+        view! {
+            <h2>"Top Users"</h2>
+            <table>
+                <tr><th>"#"</th><th>"Email"</th><th>"User ID"</th><th>"Tokens"</th><th>"Cost"</th></tr>
+                {rows}
+            </table>
+        }
+    });
 
     view! {
-        // ── Summary cards ─────────────────────────────────────────────────────
-        <div class="stat-cards">
-            <div class="stat-card">
-                <div class="stat-label">"Total Conversations"</div>
-                <div class="stat-value">{data.total_conversations.to_string()}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">"Total Tokens"</div>
-                <div class="stat-value">{format_number(total_tokens)}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">"Estimated Cost"</div>
-                <div class="stat-value">{format!("${:.4}", data.estimated_cost_usd)}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">"Input / Output"</div>
-                <div class="stat-value">
-                    {format_number(data.total_input_tokens)}
-                    " / "
-                    {format_number(data.total_output_tokens)}
-                </div>
-            </div>
-        </div>
-
-        // ── Model usage bar chart ─────────────────────────────────────────────
-        {(!data.by_model.is_empty()).then(|| {
-            let bars = data.by_model.clone().into_iter().map(|m| {
-                let tokens = m.input_tokens + m.output_tokens;
-                let pct    = (tokens as f64 / max_tokens as f64 * 100.0) as u32;
-                view! {
-                    <div class="bar-row">
-                        <div class="bar-label truncate">{m.model_id.clone()}</div>
-                        <div class="bar-track">
-                            <div class="bar-fill" style=format!("width:{}%", pct)></div>
-                        </div>
-                        <div class="bar-tokens">{format_number(tokens)}</div>
-                        <div class="bar-cost">{format!("${:.4}", m.total_cost)}</div>
-                    </div>
-                }
-            }).collect_view();
-
-            view! {
-                <section class="analytics-section">
-                    <h2 class="analytics-section-title">"Usage by Model"</h2>
-                    <div class="bar-chart">{bars}</div>
-                </section>
-            }
-        })}
-
-        // ── Top users table ───────────────────────────────────────────────────
-        {(!data.top_users.is_empty()).then(|| {
-            let rows = data.top_users.clone().into_iter().enumerate().map(|(i, u)| {
-                view! {
-                    <tr>
-                        <td>{(i + 1).to_string()}</td>
-                        <td>{u.email}</td>
-                        <td class="mono">{u.user_id}</td>
-                        <td class="number">{format_number(u.total_tokens)}</td>
-                        <td class="number">{format!("${:.4}", u.total_cost)}</td>
-                    </tr>
-                }
-            }).collect_view();
-
-            view! {
-                <section class="analytics-section">
-                    <h2 class="analytics-section-title">"Top Users"</h2>
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>"#"</th>
-                                <th>"Email"</th>
-                                <th>"User ID"</th>
-                                <th>"Tokens"</th>
-                                <th>"Cost"</th>
-                            </tr>
-                        </thead>
-                        <tbody>{rows}</tbody>
-                    </table>
-                </section>
-            }
-        })}
+        {summary}
+        {models}
+        {top_users}
     }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 fn format_number(n: u64) -> String {
-    // Simple thousands separator.
     let s = n.to_string();
     let mut out = String::new();
     for (i, ch) in s.chars().rev().enumerate() {

@@ -3,7 +3,6 @@
 use leptos::prelude::*;
 use templates::{Breadcrumb, NavLink, Page};
 
-use crate::components::bots::bot_card::BotCard;
 use crate::context::auth::use_auth;
 
 #[component]
@@ -24,56 +23,69 @@ pub fn MyBotsPage() -> impl IntoView {
         }
     });
 
-    let bot_grid = view! {
-        <div class="bot-grid">
-            {move || {
-                bots.get().map(|wrap| {
-                    let list = (*wrap).clone();
-                    if list.is_empty() {
+    let bot_list = view! {
+        {move || {
+            bots.get().map(|wrap| {
+                let list = (*wrap).clone();
+                if list.is_empty() {
+                    view! { <p>"No bots yet. Create your first one above."</p> }.into_any()
+                } else {
+                    let user_id = auth.get().map(|u| u.id).unwrap_or_default();
+                    let rows = list.into_iter().map(|bot: shared::Bot| {
+                        let is_mine = bot.owner_user_id == user_id;
+                        let edit_href = format!("/bots/{}/edit", bot.id);
+                        let bot_id = bot.id.clone();
+                        #[cfg(feature = "hydrate")]
+                        let token = auth.get().map(|u| u.token).unwrap_or_default();
                         view! {
-                            <div class="empty-state">
-                                <h2>"No bots yet"</h2>
-                                <p>"Create your first bot to give it a custom instruction and model."</p>
-                            </div>
-                        }.into_any()
-                    } else {
-                        let user_id = auth.get().map(|u| u.id).unwrap_or_default();
-                        list.into_iter().map(|bot: shared::Bot| {
-                            let is_mine = bot.owner_user_id == user_id;
-                            #[cfg(feature = "hydrate")]
-                            let token = auth.get().map(|u| u.token).unwrap_or_default();
-                            view! {
-                                <BotCard
-                                    bot=bot
-                                    editable=is_mine
-                                    on_delete=move |id| {
-                                        #[cfg(feature = "hydrate")]
-                                        {
-                                            let t = token.clone();
-                                            wasm_bindgen_futures::spawn_local(async move {
-                                                let _ = crate::api::delete_bot(&id, &t).await;
-                                                version.update(|v| *v += 1);
-                                            });
-                                        }
-                                        #[cfg(not(feature = "hydrate"))]
-                                        let _ = &id;
-                                    }
-                                    on_use=move |_| {}
-                                />
-                            }
-                        }).collect_view().into_any()
-                    }
-                })
-            }}
-        </div>
+                            <tr>
+                                <td>{bot.title}</td>
+                                <td>{bot.description}</td>
+                                <td>{format!("{:?}", bot.visibility)}</td>
+                                <td>
+                                    {if is_mine {
+                                        view! {
+                                            <a href={edit_href}>"Edit"</a>
+                                            " "
+                                            <a href="#" on:click=move |ev| {
+                                                ev.prevent_default();
+                                                #[cfg(feature = "hydrate")]
+                                                {
+                                                    let t = token.clone();
+                                                    let id = bot_id.clone();
+                                                    wasm_bindgen_futures::spawn_local(async move {
+                                                        let _ = crate::api::delete_bot(&id, &t).await;
+                                                        version.update(|v| *v += 1);
+                                                    });
+                                                }
+                                                #[cfg(not(feature = "hydrate"))]
+                                                let _ = &bot_id;
+                                            }>"Delete"</a>
+                                        }.into_any()
+                                    } else {
+                                        view! { <span>"-"</span> }.into_any()
+                                    }}
+                                </td>
+                            </tr>
+                        }
+                    }).collect_view();
+                    view! {
+                        <table>
+                            <tr><th>"Title"</th><th>"Description"</th><th>"Visibility"</th><th>"Actions"</th></tr>
+                            {rows}
+                        </table>
+                    }.into_any()
+                }
+            })
+        }}
     };
 
     Page {
         title: "My Bots".to_string(),
         breadcrumbs: vec![Breadcrumb::current("My Bots")],
-        nav_links: vec![NavLink::new("+ Create Bot", "/bots/new")],
+        nav_links: vec![NavLink::new("Create Bot", "/bots/new")],
         info_rows: vec![],
-        content: bot_grid,
+        content: bot_list,
         subpages: vec![],
     }
     .into_view()

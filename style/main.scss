@@ -73,75 +73,57 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Page template                                                        */
+/* Page template (hub-page — mirrors gateway-proxy-rs style)           */
 /* ------------------------------------------------------------------ */
 @layer components {
-  /* Page wrapper — scrollable main area */
-  .page-content {
-    @apply flex flex-col flex-1 min-w-0 overflow-y-auto p-6 gap-6;
-  }
-  .page-content-narrow {
-    @apply max-w-2xl;
-  }
-
-  /* Header row: title (+ optional breadcrumbs) + action buttons */
-  .page-header {
-    @apply flex items-center justify-between gap-4 flex-wrap;
-  }
-  .page-title {
-    @apply text-xl font-semibold text-gray-900 dark:text-gray-100;
-  }
-  .page-breadcrumb {
-    @apply flex items-center gap-1 text-xl font-semibold;
-  }
-  .breadcrumb-link {
-    @apply text-blue-600 dark:text-blue-400 hover:underline;
-  }
-  .breadcrumb-current {
-    @apply text-gray-900 dark:text-gray-100;
-  }
-  .breadcrumb-sep {
-    @apply text-gray-400 dark:text-gray-600 select-none;
-  }
-  .page-actions {
-    @apply flex items-center gap-2 flex-wrap;
+  /* Scrollable content area */
+  .hub-page {
+    @apply flex flex-col flex-1 min-w-0 overflow-y-auto;
+    font-family: monospace;
+    padding: 16px;
   }
 
-  /* Info table — label / value pairs */
-  .info-table {
-    @apply w-full border-collapse text-sm;
+  /* h1 — breadcrumb title */
+  .hub-page h1 {
+    @apply text-base font-bold mb-3;
   }
-  .info-table th {
-    @apply text-left font-medium text-gray-500 dark:text-gray-400
-           pr-4 py-1.5 whitespace-nowrap w-0;
-  }
-  .info-table td {
-    @apply text-gray-900 dark:text-gray-100 py-1.5;
+  .hub-page h1 a {
+    @apply underline;
   }
 
-  /* Subpages grid — quick-link cards */
-  .subpages-grid {
-    @apply grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3;
+  /* h2 — section headers */
+  .hub-page h2 {
+    @apply text-base font-bold mt-4 mb-1;
   }
-  .subpage-card {
-    @apply flex flex-col gap-1 rounded-xl border border-gray-200 dark:border-gray-700
-           bg-white dark:bg-gray-900 px-4 py-3
-           hover:border-blue-400 dark:hover:border-blue-500
-           transition-colors no-underline;
+
+  /* Tables — matches gateway-proxy-rs */
+  .hub-page table {
+    width: 100%;
+    border-collapse: collapse;
   }
-  .subpage-label {
-    @apply text-sm font-medium text-gray-900 dark:text-gray-100;
+  .hub-page th {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid #ccc;
   }
-  .subpage-count {
-    @apply text-xs text-gray-500 dark:text-gray-400;
+  .hub-page td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+  .hub-page tr:last-child td {
+    border-bottom: none;
+  }
+  .hub-page a {
+    @apply underline;
+  }
+  .hub-page pre {
+    white-space: pre-wrap;
   }
 
   /* Pagination */
   .pagination-nav {
-    @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
-  }
-  .pagination-info {
-    @apply tabular-nums;
+    margin: 8px 0;
   }
 
   /* Button size variants */
@@ -163,15 +145,15 @@
   .badge {
     @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
   }
-  .badge-green  { @apply bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400; }
-  .badge-yellow { @apply bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400; }
-  .badge-gray   { @apply bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400; }
-  .badge-active { @apply badge badge-green; }
+  .badge-green    { @apply bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400; }
+  .badge-yellow   { @apply bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400; }
+  .badge-gray     { @apply bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400; }
+  .badge-active   { @apply badge badge-green; }
   .badge-inactive { @apply badge badge-gray; }
 
   /* Bot grid */
   .bot-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2;
   }
   .bot-card {
     @apply flex flex-col gap-2 rounded-xl border border-gray-200 dark:border-gray-700
@@ -192,7 +174,7 @@
 
   /* Forms */
   .bot-form {
-    @apply flex flex-col gap-5;
+    @apply flex flex-col gap-5 mt-2;
   }
   .form-group {
     @apply flex flex-col gap-1.5;
@@ -208,6 +190,7 @@
            bg-white dark:bg-gray-900 px-3 py-2 text-sm
            focus:border-blue-500 dark:focus:border-blue-400 outline-none
            transition-colors;
+    font-family: inherit;
   }
   .form-textarea {
     @apply form-input resize-y min-h-[7rem];
@@ -219,99 +202,23 @@
     @apply w-full accent-blue-600;
   }
   .form-error-banner {
-    @apply rounded-lg bg-red-50 dark:bg-red-900/20
-           border border-red-200 dark:border-red-700
-           text-red-700 dark:text-red-400
-           px-4 py-3 text-sm;
+    padding: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 8px;
   }
   .form-actions {
     @apply flex gap-3 pt-2;
   }
   .gen-params {
-    @apply flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4;
+    padding: 8px;
+    border: 1px solid #ccc;
   }
 
-  /* Empty state */
-  .empty-state {
-    @apply flex flex-col items-center justify-center gap-2
-           text-center py-16 text-gray-500 dark:text-gray-400;
-  }
-  .empty-state h2 {
-    @apply text-lg font-semibold text-gray-700 dark:text-gray-300;
-  }
-
-  /* Page center (for 404, empty chat) */
+  /* Page center (for 404) */
   .page-center {
     @apply flex flex-col flex-1 items-center justify-center;
-  }
-
-  /* Admin styles */
-  .admin-table-wrap {
-    @apply overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700;
-  }
-  .admin-table {
-    @apply w-full text-sm border-collapse;
-  }
-  .admin-table thead th {
-    @apply text-left font-medium text-gray-500 dark:text-gray-400
-           px-4 py-2.5 border-b border-gray-200 dark:border-gray-700
-           bg-gray-50 dark:bg-gray-900/50;
-  }
-  .admin-table tbody td {
-    @apply px-4 py-2.5 border-b border-gray-100 dark:border-gray-800
-           text-gray-900 dark:text-gray-100;
-  }
-  .admin-table tbody tr:last-child td { @apply border-b-0; }
-  .admin-table .center { @apply text-center; }
-  .admin-table .mono   { @apply font-mono text-xs; }
-  .admin-table .number { @apply text-right tabular-nums; }
-  .admin-table .truncate { @apply max-w-[12rem] overflow-hidden text-ellipsis whitespace-nowrap; }
-  .admin-table .email-cell { @apply max-w-[16rem] overflow-hidden text-ellipsis whitespace-nowrap; }
-  .admin-table .id-cell    { @apply max-w-[10rem] overflow-hidden text-ellipsis whitespace-nowrap; }
-  .admin-denied { @apply text-sm text-red-600 dark:text-red-400; }
-
-  /* Analytics */
-  .stat-cards {
-    @apply grid grid-cols-2 lg:grid-cols-4 gap-4;
-  }
-  .stat-card {
-    @apply rounded-xl border border-gray-200 dark:border-gray-700
-           bg-white dark:bg-gray-900 px-5 py-4;
-  }
-  .stat-label {
-    @apply text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide;
-  }
-  .stat-value {
-    @apply mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100 tabular-nums;
-  }
-  .analytics-section {
-    @apply flex flex-col gap-3;
-  }
-  .analytics-section-title {
-    @apply text-base font-semibold text-gray-900 dark:text-gray-100;
-  }
-  .bar-chart {
-    @apply flex flex-col gap-2;
-  }
-  .bar-row {
-    @apply grid gap-2 items-center text-sm;
-    grid-template-columns: 14rem 1fr 5rem 5rem;
-  }
-  .bar-label {
-    @apply text-gray-700 dark:text-gray-300 text-xs font-mono truncate;
-  }
-  .bar-track {
-    @apply h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden;
-  }
-  .bar-fill {
-    @apply h-full rounded-full bg-blue-500;
-    transition: width 300ms ease;
-  }
-  .bar-tokens {
-    @apply text-right text-xs tabular-nums text-gray-600 dark:text-gray-400;
-  }
-  .bar-cost {
-    @apply text-right text-xs tabular-nums text-gray-600 dark:text-gray-400;
+    font-family: monospace;
+    padding: 16px;
   }
 
   /* Chat page */

@@ -139,107 +139,87 @@ pub fn BotEditorPage() -> impl IntoView {
     };
 
     let form = view! {
-        <form class="bot-form" on:submit=on_submit>
-            {move || error_msg.get().map(|e| view! {
-                <div class="form-error-banner">{e}</div>
-            })}
+        <form on:submit=on_submit>
+            {move || error_msg.get().map(|e| view! { <p>{e}</p> })}
 
-            <div class="form-group">
-                <label class="form-label" for="bot-title">"Title"</label>
-                <input
-                    id="bot-title"
-                    type="text"
-                    class="form-input"
-                    required=true
-                    placeholder="My Assistant"
-                    prop:value=title
-                    on:input=move |ev| set_title.set(event_target_value(&ev))
-                />
-            </div>
+            <table>
+                <tr>
+                    <td><label for="bot-title">"Title"</label></td>
+                    <td>
+                        <input id="bot-title" type="text" required=true
+                            placeholder="My Assistant"
+                            prop:value=title
+                            on:input=move |ev| set_title.set(event_target_value(&ev))
+                        />
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="bot-desc">"Description"</label></td>
+                    <td>
+                        <input id="bot-desc" type="text"
+                            placeholder="Short description shown in the Bot Store"
+                            prop:value=description
+                            on:input=move |ev| set_description.set(event_target_value(&ev))
+                        />
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="bot-instr">"Instruction"</label></td>
+                    <td>
+                        <textarea id="bot-instr" rows="6" required=true
+                            placeholder="You are a helpful assistant that…"
+                            prop:value=instruction
+                            on:input=move |ev| set_instruction.set(event_target_value(&ev))
+                        />
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="bot-model">"Model"</label></td>
+                    <td>
+                        <select id="bot-model" prop:value=model_id
+                            on:change=move |ev| set_model_id.set(event_target_value(&ev))
+                        >
+                            <option value="">"User default"</option>
+                            {move || {
+                                models.get().map(|wrap| {
+                                    (*wrap).clone().into_iter().map(|m: shared::ModelInfo| view! {
+                                        <option value=m.id.clone()>{m.display_name}</option>
+                                    }).collect_view()
+                                })
+                            }}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="bot-vis">"Visibility"</label></td>
+                    <td>
+                        <select id="bot-vis" prop:value=visibility
+                            on:change=move |ev| set_visibility.set(event_target_value(&ev))
+                        >
+                            <option value="private">"Private"</option>
+                            <option value="unlisted">"Unlisted"</option>
+                            <option value="public">"Public"</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
 
-            <div class="form-group">
-                <label class="form-label" for="bot-desc">"Description"</label>
-                <input
-                    id="bot-desc"
-                    type="text"
-                    class="form-input"
-                    placeholder="Short description shown in the Bot Store"
-                    prop:value=description
-                    on:input=move |ev| set_description.set(event_target_value(&ev))
-                />
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="bot-instr">"Instruction (system prompt)"</label>
-                <textarea
-                    id="bot-instr"
-                    class="form-textarea"
-                    rows="6"
-                    required=true
-                    placeholder="You are a helpful assistant that…"
-                    prop:value=instruction
-                    on:input=move |ev| set_instruction.set(event_target_value(&ev))
-                />
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="bot-model">"Model override (optional)"</label>
-                <select
-                    id="bot-model"
-                    class="model-selector form-select"
-                    prop:value=model_id
-                    on:change=move |ev| set_model_id.set(event_target_value(&ev))
-                >
-                    <option value="">"User default"</option>
-                    {move || {
-                        models.get().map(|wrap| {
-                            (*wrap).clone().into_iter().map(|m: shared::ModelInfo| view! {
-                                <option value=m.id.clone()>{m.display_name}</option>
-                            }).collect_view()
-                        })
-                    }}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="bot-vis">"Visibility"</label>
-                <select
-                    id="bot-vis"
-                    class="model-selector form-select"
-                    prop:value=visibility
-                    on:change=move |ev| set_visibility.set(event_target_value(&ev))
-                >
-                    <option value="private">"Private"</option>
-                    <option value="unlisted">"Unlisted"</option>
-                    <option value="public">"Public"</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <button
-                    type="button"
-                    class="btn btn-secondary btn-sm"
+            <p>
+                <button type="button"
                     on:click=move |_| show_params.update(|v| *v = !*v)
                 >
-                    {move || if show_params.get() {
-                        "▲ Hide generation parameters"
-                    } else {
-                        "▼ Show generation parameters"
-                    }}
+                    {move || if show_params.get() { "▲ Hide parameters" } else { "▼ Show parameters" }}
                 </button>
-            </div>
+            </p>
 
             {move || show_params.get().then(|| view! {
                 <GenerationParamsEditor params=gen_params/>
             })}
 
-            <div class="form-actions">
-                <a href="/bots" class="btn btn-secondary">"Cancel"</a>
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                    prop:disabled=submitting
-                >
+            <p>
+                <a href="/bots">"Cancel"</a>
+                " "
+                <button type="submit" prop:disabled=submitting>
                     {move || if submitting.get() {
                         "Saving…"
                     } else if is_edit() {
@@ -248,7 +228,7 @@ pub fn BotEditorPage() -> impl IntoView {
                         "Create bot"
                     }}
                 </button>
-            </div>
+            </p>
         </form>
     };
 
