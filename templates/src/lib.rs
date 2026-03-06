@@ -1,5 +1,36 @@
 use leptos::{either::Either, prelude::*};
 
+const COLLAPSE_THRESHOLD: usize = 200;
+
+pub fn collapsible_block(content: &str, css_class: &str) -> AnyView {
+    if content.len() <= COLLAPSE_THRESHOLD {
+        let tag_content = content.to_string();
+        let class = css_class.to_string();
+        return if content.contains('\n') {
+            view! { <pre class={class}>{tag_content}</pre> }.into_any()
+        } else {
+            view! { <div class={class}>{tag_content}</div> }.into_any()
+        };
+    }
+    let preview: String = content.chars().take(COLLAPSE_THRESHOLD).collect();
+    let preview_display = format!("{}...", preview);
+    let preview_class = format!("preview-text {}", css_class);
+    let full_class = format!("collapsible-full {}", css_class);
+    let content = content.to_string();
+    view! {
+        <details class="collapsible">
+            <summary>
+                <span class={preview_class}>{preview_display}</span>
+                " "
+                <span class="show-more">"show more"</span>
+                <span class="show-less">"show less"</span>
+            </summary>
+            <div class={full_class}>{content}</div>
+        </details>
+    }
+    .into_any()
+}
+
 // ── Breadcrumb ────────────────────────────────────────────────────────────────
 
 pub struct Breadcrumb {
@@ -45,6 +76,14 @@ impl InfoRow {
     pub fn new(label: &str, value: &str) -> Self {
         let value_string = value.to_string();
         Self { label: label.to_string(), value: value_string.into_any() }
+    }
+
+    pub fn raw(label: &str, html: impl ToString) -> Self {
+        let html = html.to_string();
+        Self {
+            label: label.to_string(),
+            value: (view! { <span inner_html={html}></span> }).into_any(),
+        }
     }
 
     pub fn view(label: &str, value: impl IntoView + 'static) -> Self {
@@ -116,7 +155,7 @@ pub fn pagination_nav(pagination: &Pagination) -> AnyView {
             pagination.current_page - 1,
             pagination.extra_params
         );
-        Either::Left(view! { <a href={href}>"← Previous"</a> })
+        Either::Left(view! { <a href={href}>"Previous"</a> })
     } else {
         Either::Right(())
     };
@@ -127,13 +166,13 @@ pub fn pagination_nav(pagination: &Pagination) -> AnyView {
             pagination.current_page + 1,
             pagination.extra_params
         );
-        Either::Left(view! { <a href={href}>"Next →"</a> })
+        Either::Left(view! { <a href={href}>"Next"</a> })
     } else {
         Either::Right(())
     };
 
     view! {
-        <p class="pagination-nav">{info}" "{prev}" "{next}</p>
+        <p>{info}" "{prev}" "{next}</p>
     }
     .into_any()
 }
