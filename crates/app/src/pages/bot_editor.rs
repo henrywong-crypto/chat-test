@@ -142,7 +142,7 @@ pub fn BotEditorPage() -> impl IntoView {
         <form on:submit=on_submit>
             {move || error_msg.get().map(|e| view! { <p>{e}</p> })}
 
-            <table>
+            <table><tbody>
                 <tr>
                     <td><label for="bot-title">"Title"</label></td>
                     <td>
@@ -202,7 +202,7 @@ pub fn BotEditorPage() -> impl IntoView {
                         </select>
                     </td>
                 </tr>
-            </table>
+            </tbody></table>
 
             <p>
                 <button type="button"

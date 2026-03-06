@@ -62,14 +62,14 @@ fn AnalyticsDashboard(data: UsageAnalyticsResponse) -> impl IntoView {
     // Summary info table
     let summary = view! {
         <h2>"Summary"</h2>
-        <table>
+        <table><tbody>
             <tr><td>"Conversations"</td><td>{data.total_conversations.to_string()}</td></tr>
             <tr><td>"Total tokens"</td><td>{format_number(total_tokens)}</td></tr>
             <tr><td>"Input / Output"</td>
                 <td>{format_number(data.total_input_tokens)}" / "{format_number(data.total_output_tokens)}</td>
             </tr>
             <tr><td>"Estimated cost"</td><td>{format!("${:.4}", data.estimated_cost_usd)}</td></tr>
-        </table>
+        </tbody></table>
     };
 
     // Model usage table
@@ -87,8 +87,8 @@ fn AnalyticsDashboard(data: UsageAnalyticsResponse) -> impl IntoView {
         view! {
             <h2>"Usage by Model"</h2>
             <table>
-                <tr><th>"Model"</th><th>"Tokens"</th><th>"Cost"</th></tr>
-                {rows}
+                <thead><tr><th>"Model"</th><th>"Tokens"</th><th>"Cost"</th></tr></thead>
+                <tbody>{rows}</tbody>
             </table>
         }
     });
@@ -109,8 +109,8 @@ fn AnalyticsDashboard(data: UsageAnalyticsResponse) -> impl IntoView {
         view! {
             <h2>"Top Users"</h2>
             <table>
-                <tr><th>"#"</th><th>"Email"</th><th>"User ID"</th><th>"Tokens"</th><th>"Cost"</th></tr>
-                {rows}
+                <thead><tr><th>"#"</th><th>"Email"</th><th>"User ID"</th><th>"Tokens"</th><th>"Cost"</th></tr></thead>
+                <tbody>{rows}</tbody>
             </table>
         }
     });

@@ -193,11 +193,11 @@ impl<C: IntoView + 'static> Page<C> {
                 {if !nav_links.is_empty() {
                     Either::Left(view! {
                         <h2>"Navigation"</h2>
-                        <table>
+                        <table><tbody>
                             {nav_links.into_iter().map(|link| view! {
                                 <tr><td><a href={link.href}>{link.label}</a></td></tr>
                             }).collect::<Vec<_>>()}
-                        </table>
+                        </tbody></table>
                     })
                 } else {
                     Either::Right(())
@@ -207,11 +207,11 @@ impl<C: IntoView + 'static> Page<C> {
                 {if !info_rows.is_empty() {
                     Either::Left(view! {
                         <h2>"Info"</h2>
-                        <table>
+                        <table><tbody>
                             {info_rows.into_iter().map(|row| view! {
                                 <tr><td>{row.label}</td><td>{row.value}</td></tr>
                             }).collect::<Vec<_>>()}
-                        </table>
+                        </tbody></table>
                     })
                 } else {
                     Either::Right(())
@@ -225,13 +225,17 @@ impl<C: IntoView + 'static> Page<C> {
                     Either::Left(view! {
                         <h2>"Subpages"</h2>
                         <table>
-                            <tr><th>"Page"</th><th>"Count"</th></tr>
-                            {subpages.into_iter().map(|sub| view! {
-                                <tr>
-                                    <td><a href={sub.href}>{sub.label}</a></td>
-                                    <td>{sub.count}</td>
-                                </tr>
+                            <thead><tr><th>"Page"</th><th>"Count"</th></tr></thead>
+                            <tbody>
+                            {subpages.into_iter().map(|sub| {
+                                view! {
+                                    <tr>
+                                        <td><a href={sub.href}>{sub.label}</a></td>
+                                        <td>{sub.count}</td>
+                                    </tr>
+                                }
                             }).collect::<Vec<_>>()}
+                            </tbody>
                         </table>
                     })
                 } else {

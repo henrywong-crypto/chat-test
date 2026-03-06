@@ -27,7 +27,7 @@ pub fn BotStorePage() -> impl IntoView {
                 if list.is_empty() {
                     view! { <p>"No bots have been published to the store yet."</p> }.into_any()
                 } else {
-                    let rows = list.into_iter().map(|bot| {
+                    let rows = list.into_iter().map(|bot: shared::Bot| {
                         view! {
                             <tr>
                                 <td>{bot.title}</td>
@@ -38,8 +38,8 @@ pub fn BotStorePage() -> impl IntoView {
                     }).collect::<Vec<_>>();
                     view! {
                         <table>
-                            <tr><th>"Title"</th><th>"Description"</th><th></th></tr>
-                            {rows}
+                            <thead><tr><th>"Title"</th><th>"Description"</th><th></th></tr></thead>
+                            <tbody>{rows}</tbody>
                         </table>
                     }.into_any()
                 }

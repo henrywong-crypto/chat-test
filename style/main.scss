@@ -78,7 +78,8 @@
     border-bottom: 1px solid #eee;
     vertical-align: top;
   }
-  .hub-page tr:last-child td {
+  .hub-page tr:last-child td,
+  .hub-page tbody tr:last-child td {
     border-bottom: none;
   }
   .hub-page a {

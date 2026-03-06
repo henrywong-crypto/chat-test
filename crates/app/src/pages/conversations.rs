@@ -30,7 +30,7 @@ pub fn ConversationsPage() -> impl IntoView {
                     }.into_any()
                 } else {
                     let total = list.len();
-                    let rows = list.into_iter().map(|c| {
+                    let rows = list.into_iter().map(|c: shared::ConversationMeta| {
                         let href = format!("/c/{}", c.id);
                         view! {
                             <tr>
@@ -42,8 +42,8 @@ pub fn ConversationsPage() -> impl IntoView {
                     view! {
                         <p>{format!("Total: {}", total)}</p>
                         <table>
-                            <tr><th>"Title"</th><th>"ID"</th></tr>
-                            {rows}
+                            <thead><tr><th>"Title"</th><th>"ID"</th></tr></thead>
+                            <tbody>{rows}</tbody>
                         </table>
                     }.into_any()
                 }

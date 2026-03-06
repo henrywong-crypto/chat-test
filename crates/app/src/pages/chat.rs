@@ -188,18 +188,19 @@ pub fn ChatPage() -> impl IntoView {
             </h1>
 
             <h2>"Navigation"</h2>
-            <table>
+            <table><tbody>
                 {move || conv_id().map(|_| view! {
                     <tr><td><a href="/c/new">"New Conversation"</a></td></tr>
                 })}
                 <tr><td><a href="/conversations">"Back"</a></td></tr>
-            </table>
+            </tbody></table>
 
             {move || (!messages.get().is_empty() || !streaming.get().is_empty()).then(|| view! {
                 <h2>"Messages"</h2>
                 <p>{move || format!("Total: {}", messages.get().len())}</p>
                 <table>
-                    <tr><th>"#"</th><th>"Role"</th><th>"Content"</th></tr>
+                    <thead><tr><th>"#"</th><th>"Role"</th><th>"Content"</th></tr></thead>
+                    <tbody>
                     {move || messages.get().into_iter().enumerate().map(|(i, m)| view! {
                         <tr>
                             <td>{i + 1}</td>
@@ -219,11 +220,12 @@ pub fn ChatPage() -> impl IntoView {
                             })
                         }
                     }}
+                    </tbody>
                 </table>
             })}
 
             <form on:submit=on_submit>
-                <table>
+                <table><tbody>
                     <tr>
                         <td><label>"Model"</label></td>
                         <td>
@@ -258,7 +260,7 @@ pub fn ChatPage() -> impl IntoView {
                             />
                         </td>
                     </tr>
-                </table>
+                </tbody></table>
             </form>
         </div>
     }
