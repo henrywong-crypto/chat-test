@@ -83,7 +83,7 @@ fn AnalyticsDashboard(data: UsageAnalyticsResponse) -> impl IntoView {
                     <td>{format!("${:.4}", m.total_cost)}</td>
                 </tr>
             }
-        }).collect_view();
+        }).collect::<Vec<_>>();
         view! {
             <h2>"Usage by Model"</h2>
             <table>
@@ -105,7 +105,7 @@ fn AnalyticsDashboard(data: UsageAnalyticsResponse) -> impl IntoView {
                     <td>{format!("${:.4}", u.total_cost)}</td>
                 </tr>
             }
-        }).collect_view();
+        }).collect::<Vec<_>>();
         view! {
             <h2>"Top Users"</h2>
             <table>

@@ -2,7 +2,7 @@
 
 use leptos::prelude::*;
 use leptos_router::hooks::{use_navigate, use_params_map};
-use shared::{BotVisibility, GenerationParams};
+use shared::{Bot, BotVisibility, GenerationParams, ModelInfo};
 #[cfg(feature = "hydrate")]
 use shared::{CreateBotRequest, UpdateBotRequest};
 use templates::{Breadcrumb, NavLink, Page};
@@ -38,7 +38,7 @@ pub fn BotEditorPage() -> impl IntoView {
         let id    = bot_id();
         let token = auth.get().map(|u| u.token).unwrap_or_default();
         async move {
-            let Some(id) = id else { return None::<shared::Bot>; };
+            let Some(id) = id else { return None::<Bot>; };
             #[cfg(not(feature = "hydrate"))]
             let _ = &id;
             if token.is_empty() { return None; }
@@ -182,9 +182,9 @@ pub fn BotEditorPage() -> impl IntoView {
                             <option value="">"User default"</option>
                             {move || {
                                 models.get().map(|wrap| {
-                                    (*wrap).clone().into_iter().map(|m: shared::ModelInfo| view! {
+                                    (*wrap).clone().into_iter().map(|m: ModelInfo| view! {
                                         <option value=m.id.clone()>{m.display_name}</option>
-                                    }).collect_view()
+                                    }).collect::<Vec<_>>()
                                 })
                             }}
                         </select>
@@ -219,15 +219,10 @@ pub fn BotEditorPage() -> impl IntoView {
             <p>
                 <a href="/bots">"Cancel"</a>
                 " "
-                <button type="submit" prop:disabled=submitting>
-                    {move || if submitting.get() {
-                        "Saving…"
-                    } else if is_edit() {
-                        "Save changes"
-                    } else {
-                        "Create bot"
-                    }}
-                </button>
+                <input type="submit"
+                    prop:value=move || if submitting.get() { "Saving…" } else if is_edit() { "Save changes" } else { "Create bot" }
+                    prop:disabled=submitting
+                />
             </p>
         </form>
     };

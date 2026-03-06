@@ -31,7 +31,7 @@ pub fn MyBotsPage() -> impl IntoView {
                     view! { <p>"No bots yet. Create your first one above."</p> }.into_any()
                 } else {
                     let user_id = auth.get().map(|u| u.id).unwrap_or_default();
-                    let rows = list.into_iter().map(|bot: shared::Bot| {
+                    let rows = list.into_iter().map(|bot| {
                         let is_mine = bot.owner_user_id == user_id;
                         let edit_href = format!("/bots/{}/edit", bot.id);
                         let bot_id = bot.id.clone();
@@ -68,7 +68,7 @@ pub fn MyBotsPage() -> impl IntoView {
                                 </td>
                             </tr>
                         }
-                    }).collect_view();
+                    }).collect::<Vec<_>>();
                     view! {
                         <table>
                             <tr><th>"Title"</th><th>"Description"</th><th>"Visibility"</th><th>"Actions"</th></tr>

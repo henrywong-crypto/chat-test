@@ -86,6 +86,11 @@
   }
   .hub-page pre {
     white-space: pre-wrap;
+    margin-top: 0;
+  }
+  .hub-page textarea {
+    width: 100%;
+    font-family: monospace;
   }
 
   /* Pagination */

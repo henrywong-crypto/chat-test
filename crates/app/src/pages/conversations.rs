@@ -29,7 +29,8 @@ pub fn ConversationsPage() -> impl IntoView {
                         <p>"No conversations yet. "<a href="/c/new">"Start a new one."</a></p>
                     }.into_any()
                 } else {
-                    let rows = list.into_iter().map(|c: shared::ConversationMeta| {
+                    let total = list.len();
+                    let rows = list.into_iter().map(|c| {
                         let href = format!("/c/{}", c.id);
                         view! {
                             <tr>
@@ -37,8 +38,9 @@ pub fn ConversationsPage() -> impl IntoView {
                                 <td>{c.id}</td>
                             </tr>
                         }
-                    }).collect_view();
+                    }).collect::<Vec<_>>();
                     view! {
+                        <p>{format!("Total: {}", total)}</p>
                         <table>
                             <tr><th>"Title"</th><th>"ID"</th></tr>
                             {rows}

@@ -21,12 +21,9 @@ pub fn HomePage() -> impl IntoView {
             subpages.push(Subpage::new("Admin: Analytics", "/admin/analytics", ""));
         }
         Page {
-            title:       "Bedrock RS".to_string(),
-            breadcrumbs: vec![],
-            nav_links:   vec![],
-            info_rows:   vec![],
-            content:     (),
+            title: "Bedrock RS".to_string(),
             subpages,
+            ..Default::default()
         }
         .into_view()
         .into_any()

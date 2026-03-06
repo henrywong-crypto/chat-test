@@ -5,6 +5,7 @@ use leptos::prelude::*;
 use leptos_router::hooks::{use_navigate, use_params_map};
 #[cfg(feature = "hydrate")]
 use shared::ContentBlock;
+use shared::{Conversation, Message, ModelInfo, Role};
 
 use crate::context::auth::use_auth;
 use crate::context::conversations::use_conversation_context;
@@ -57,12 +58,12 @@ pub fn ChatPage() -> impl IntoView {
         async move {
             #[cfg(feature = "hydrate")]
             {
-                let Some(id) = id else { return None::<shared::Conversation>; };
+                let Some(id) = id else { return None::<Conversation>; };
                 if token.is_empty() { return None; }
                 crate::api::fetch_conversation(&id, &token).await.ok()
             }
             #[cfg(not(feature = "hydrate"))]
-            { let _ = token; None::<shared::Conversation> }
+            { let _ = token; None::<Conversation> }
         }
     });
 
@@ -73,12 +74,12 @@ pub fn ChatPage() -> impl IntoView {
                 let thread = conv.active_thread();
                 let ui: Vec<UiMessage> = thread
                     .into_iter()
-                    .filter_map(|msg: &shared::Message| {
+                    .filter_map(|msg: &Message| {
                         let content = msg.text_content();
                         let role = match msg.role {
-                            shared::Role::User      => "user".to_string(),
-                            shared::Role::Assistant => "assistant".to_string(),
-                            shared::Role::System    => return None,
+                            Role::User      => "user".to_string(),
+                            Role::Assistant => "assistant".to_string(),
+                            Role::System    => return None,
                         };
                         Some(UiMessage { id: msg.id.clone(), role, content })
                     })
@@ -188,54 +189,76 @@ pub fn ChatPage() -> impl IntoView {
 
             <h2>"Navigation"</h2>
             <table>
-                <tr><td><a href="/c/new">"New Conversation"</a></td></tr>
-                <tr><td><a href="/conversations">"All Conversations"</a></td></tr>
+                {move || conv_id().map(|_| view! {
+                    <tr><td><a href="/c/new">"New Conversation"</a></td></tr>
+                })}
+                <tr><td><a href="/conversations">"Back"</a></td></tr>
             </table>
 
-            <h2>"Messages"</h2>
-            {move || messages.get().into_iter().map(|m| view! {
-                <p><strong>{format!("{}:", m.role)}</strong></p>
-                <pre style="margin-top:0;white-space:pre-wrap">{m.content}</pre>
-            }).collect_view()}
-
-            {move || {
-                let s = streaming.get();
-                if s.is_empty() {
-                    None
-                } else {
-                    Some(view! {
-                        <p><strong>"assistant:"</strong></p>
-                        <pre style="margin-top:0;white-space:pre-wrap">{s}</pre>
-                    })
-                }
-            }}
+            {move || (!messages.get().is_empty() || !streaming.get().is_empty()).then(|| view! {
+                <h2>"Messages"</h2>
+                <p>{move || format!("Total: {}", messages.get().len())}</p>
+                <table>
+                    <tr><th>"#"</th><th>"Role"</th><th>"Content"</th></tr>
+                    {move || messages.get().into_iter().enumerate().map(|(i, m)| view! {
+                        <tr>
+                            <td>{i + 1}</td>
+                            <td>{m.role}</td>
+                            <td><pre>{m.content}</pre></td>
+                        </tr>
+                    }).collect::<Vec<_>>()}
+                    {move || {
+                        let s = streaming.get();
+                        if s.is_empty() { None } else {
+                            Some(view! {
+                                <tr>
+                                    <td>"…"</td>
+                                    <td>"assistant"</td>
+                                    <td><pre>{s}</pre></td>
+                                </tr>
+                            })
+                        }
+                    }}
+                </table>
+            })}
 
             <form on:submit=on_submit>
-                <p>
-                    <label>"Model: "</label>
-                    <select on:change=move |ev| {
-                        let v = event_target_value(&ev);
-                        selected_model.set(if v.is_empty() { None } else { Some(v) });
-                    }>
-                        <option value="">"Default"</option>
-                        {move || models_res.get().map(|wrap| {
-                            (*wrap).clone().into_iter().map(|m: shared::ModelInfo| view! {
-                                <option value=m.id.clone()>{m.display_name}</option>
-                            }).collect_view()
-                        })}
-                    </select>
-                </p>
-                <p>
-                    <textarea rows="4" style="width:100%;font-family:monospace"
-                        prop:value=input_text
-                        on:input=move |ev| set_input_text.set(event_target_value(&ev))
-                    />
-                </p>
-                <p>
-                    <button type="submit" prop:disabled=is_streaming>
-                        {move || if is_streaming.get() { "Sending…" } else { "Send" }}
-                    </button>
-                </p>
+                <table>
+                    <tr>
+                        <td><label>"Model"</label></td>
+                        <td>
+                            <select on:change=move |ev| {
+                                let v = event_target_value(&ev);
+                                selected_model.set(if v.is_empty() { None } else { Some(v) });
+                            }>
+                                <option value="">"Default"</option>
+                                {move || models_res.get().map(|wrap| {
+                                    (*wrap).clone().into_iter().map(|m: ModelInfo| view! {
+                                        <option value=m.id.clone()>{m.display_name}</option>
+                                    }).collect::<Vec<_>>()
+                                })}
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>"Message"</label></td>
+                        <td>
+                            <textarea rows="4"
+                                prop:value=input_text
+                                on:input=move |ev| set_input_text.set(event_target_value(&ev))
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <input type="submit"
+                                prop:value=move || if is_streaming.get() { "Sending…" } else { "Send" }
+                                prop:disabled=is_streaming
+                            />
+                        </td>
+                    </tr>
+                </table>
             </form>
         </div>
     }
