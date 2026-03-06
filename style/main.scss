@@ -6,7 +6,6 @@
 /* CSS custom properties                                                */
 /* ------------------------------------------------------------------ */
 :root {
-  --sidebar-width: 260px;
   --app-text-scale: 1;
 
   /* Transition speeds */
@@ -27,7 +26,6 @@
 
   body {
     @apply bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100;
-    @apply font-sans;
   }
 
   /* Scrollbar — webkit */
@@ -43,42 +41,11 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Markdown / prose overrides                                           */
-/* ------------------------------------------------------------------ */
-@layer components {
-  .prose-chat {
-    @apply prose prose-sm dark:prose-invert max-w-none;
-  }
-  .prose-chat pre {
-    @apply relative rounded-xl bg-gray-900 dark:bg-gray-950 p-4 overflow-x-auto;
-  }
-  .prose-chat code:not(pre code) {
-    @apply rounded px-1 py-0.5
-           bg-gray-100 dark:bg-gray-800
-           text-gray-800 dark:text-gray-200
-           font-mono text-[0.85em]
-           before:content-none after:content-none;
-  }
-  .prose-chat a {
-    @apply text-blue-600 dark:text-blue-400 no-underline hover:underline;
-  }
-
-  /* Code copy button (injected by JS) */
-  .code-copy-btn {
-    @apply absolute top-2 right-2
-           btn-ghost btn-icon text-xs
-           text-gray-400 hover:text-gray-200
-           opacity-0 group-hover:opacity-100 transition-opacity;
-  }
-}
-
-/* ------------------------------------------------------------------ */
 /* Page template (hub-page — mirrors gateway-proxy-rs style)           */
 /* ------------------------------------------------------------------ */
 @layer components {
   /* Scrollable content area */
   .hub-page {
-    @apply flex flex-col flex-1 min-w-0 overflow-y-auto;
     font-family: monospace;
     padding: 16px;
   }
@@ -126,253 +93,11 @@
     margin: 8px 0;
   }
 
-  /* Button size variants */
-  .btn-sm {
-    @apply px-2.5 py-1.5 text-xs rounded-md;
-  }
-  .btn-secondary {
-    @apply btn bg-white dark:bg-gray-800
-           border border-gray-300 dark:border-gray-600
-           text-gray-700 dark:text-gray-300
-           hover:bg-gray-50 dark:hover:bg-gray-700;
-  }
-  .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700
-           active:bg-red-800 disabled:opacity-50;
-  }
-
-  /* Badge */
-  .badge {
-    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
-  }
-  .badge-green    { @apply bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400; }
-  .badge-yellow   { @apply bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400; }
-  .badge-gray     { @apply bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400; }
-  .badge-active   { @apply badge badge-green; }
-  .badge-inactive { @apply badge badge-gray; }
-
-  /* Bot grid */
-  .bot-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2;
-  }
-  .bot-card {
-    @apply flex flex-col gap-2 rounded-xl border border-gray-200 dark:border-gray-700
-           bg-white dark:bg-gray-900 p-4;
-  }
-  .bot-card-header {
-    @apply flex items-start justify-between gap-2;
-  }
-  .bot-card-title {
-    @apply font-semibold text-gray-900 dark:text-gray-100;
-  }
-  .bot-card-desc {
-    @apply text-sm text-gray-500 dark:text-gray-400 flex-1;
-  }
-  .bot-card-actions {
-    @apply flex gap-2 pt-1;
-  }
-
-  /* Forms */
-  .bot-form {
-    @apply flex flex-col gap-5 mt-2;
-  }
-  .form-group {
-    @apply flex flex-col gap-1.5;
-  }
-  .form-label {
-    @apply text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2;
-  }
-  .form-hint {
-    @apply ml-auto text-xs font-normal text-gray-400 tabular-nums;
-  }
-  .form-input {
-    @apply rounded-lg border border-gray-300 dark:border-gray-600
-           bg-white dark:bg-gray-900 px-3 py-2 text-sm
-           focus:border-blue-500 dark:focus:border-blue-400 outline-none
-           transition-colors;
-    font-family: inherit;
-  }
-  .form-textarea {
-    @apply form-input resize-y min-h-[7rem];
-  }
-  .form-select {
-    @apply form-input cursor-pointer;
-  }
-  .form-range {
-    @apply w-full accent-blue-600;
-  }
-  .form-error-banner {
-    padding: 8px;
-    border: 1px solid #ccc;
-    margin-bottom: 8px;
-  }
-  .form-actions {
-    @apply flex gap-3 pt-2;
-  }
-  .gen-params {
-    padding: 8px;
-    border: 1px solid #ccc;
-  }
-
   /* Page center (for 404) */
   .page-center {
     @apply flex flex-col flex-1 items-center justify-center;
     font-family: monospace;
     padding: 16px;
-  }
-
-  /* Chat page */
-  .chat-page {
-    @apply flex flex-col flex-1 min-h-0;
-  }
-  .chat-toolbar {
-    @apply flex items-center px-4 py-2 border-b border-gray-200 dark:border-gray-800
-           bg-white dark:bg-gray-950 flex-shrink-0;
-  }
-  .message-list {
-    @apply flex flex-col gap-4 flex-1 overflow-y-auto px-4 py-4;
-  }
-  .message {
-    @apply flex flex-col;
-  }
-  .user-message {
-    @apply items-end;
-  }
-  .message-bubble {
-    @apply max-w-[80%] rounded-2xl px-4 py-3 bg-blue-600 text-white text-sm;
-  }
-  .assistant-message {
-    @apply items-start max-w-[80%];
-  }
-  .message-input-bar {
-    @apply flex items-end gap-2 px-4 pb-4 pt-2
-           border-t border-gray-200 dark:border-gray-800
-           bg-white dark:bg-gray-950 flex-shrink-0;
-  }
-  .message-input {
-    @apply flex-1 resize-none rounded-2xl border border-gray-300 dark:border-gray-700
-           bg-white dark:bg-gray-900 px-4 py-3 text-sm outline-none
-           focus:border-blue-500 dark:focus:border-blue-400
-           transition-colors max-h-48 overflow-y-auto;
-  }
-  .btn-send {
-    @apply btn-primary;
-  }
-  .model-selector {
-    @apply form-select text-xs;
-  }
-
-  /* Sidebar */
-  .sidebar-header {
-    @apply flex items-center justify-between gap-2 px-3 py-3 flex-shrink-0;
-  }
-  .sidebar-logo {
-    @apply text-sm font-semibold text-gray-900 dark:text-gray-100 no-underline;
-  }
-  .btn-new-chat {
-    @apply btn btn-primary btn-sm;
-  }
-  .sidebar-conversations {
-    @apply flex flex-col gap-0.5 px-2 overflow-y-auto flex-1;
-  }
-  .conv-title {
-    @apply truncate;
-  }
-  .conv-item-active {
-    @apply bg-gray-200 dark:bg-gray-800 font-medium;
-  }
-  .sidebar-nav {
-    @apply flex flex-col gap-0.5 px-2 pt-2
-           border-t border-gray-200 dark:border-gray-800;
-  }
-  .nav-item {
-    @apply group flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer
-           text-sm text-gray-700 dark:text-gray-300
-           hover:bg-gray-200 dark:hover:bg-gray-800
-           transition-colors no-underline;
-  }
-  .nav-item-active {
-    @apply bg-gray-200 dark:bg-gray-800 font-medium;
-  }
-  .nav-icon {
-    @apply w-4 text-center;
-  }
-  .sidebar-section-label {
-    @apply px-3 pt-3 pb-1 text-xs font-medium uppercase tracking-wide
-           text-gray-400 dark:text-gray-600;
-  }
-  .sidebar-footer {
-    @apply px-3 py-3 border-t border-gray-200 dark:border-gray-800 flex-shrink-0;
-  }
-  .user-row {
-    @apply flex items-center gap-2;
-  }
-  .user-avatar {
-    @apply flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white
-           text-xs font-medium flex items-center justify-center;
-  }
-  .user-name {
-    @apply text-sm text-gray-700 dark:text-gray-300 truncate;
-  }
-
-  /* Navbar */
-  .navbar-title  { @apply text-sm font-medium text-gray-700 dark:text-gray-300 truncate; }
-  .navbar-actions { @apply flex items-center gap-1; }
-
-  /* App main */
-  .app-main {
-    @apply flex flex-col flex-1 min-w-0 overflow-hidden;
-  }
-
-  /* Modal */
-  .modal-hidden { @apply hidden; }
-  .modal-header {
-    @apply flex items-center justify-between px-6 py-4
-           border-b border-gray-200 dark:border-gray-700 flex-shrink-0;
-  }
-  .modal-title { @apply text-lg font-semibold text-gray-900 dark:text-gray-100; }
-  .modal-close { @apply text-gray-400 hover:text-gray-600 dark:hover:text-gray-300; }
-  .modal-body  { @apply flex-1 overflow-y-auto px-6 py-4; }
-
-  /* Settings modal */
-  .settings-tabs {
-    @apply flex gap-1 border-b border-gray-200 dark:border-gray-700 pb-0 mb-4;
-  }
-  .tab-btn {
-    @apply px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400
-           border-b-2 border-transparent -mb-px
-           hover:text-gray-900 dark:hover:text-gray-100 transition-colors;
-  }
-  .tab-btn-active {
-    @apply text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400;
-  }
-  .settings-body { @apply min-h-[12rem]; }
-  .settings-tab-content { @apply flex flex-col gap-4; }
-  .settings-actions { @apply pt-2; }
-  .profiles-table-wrap { @apply overflow-x-auto; }
-  .data-table {
-    @apply w-full text-sm border-collapse;
-  }
-  .data-table th {
-    @apply text-left font-medium text-gray-500 dark:text-gray-400 pb-2;
-  }
-  .data-table td {
-    @apply py-1.5 pr-4 text-gray-900 dark:text-gray-100;
-  }
-  .create-profile-form { @apply pt-2 border-t border-gray-100 dark:border-gray-800; }
-  .form-section-title  { @apply text-sm font-medium text-gray-700 dark:text-gray-300 mb-2; }
-  .form-row { @apply flex items-center gap-2; }
-  .empty-hint { @apply text-sm text-gray-400 dark:text-gray-600; }
-
-  /* Preferences */
-  .toggle-row {
-    @apply flex items-center justify-between gap-4 py-1;
-  }
-  .toggle-label {
-    @apply text-sm text-gray-700 dark:text-gray-300;
-  }
-  .toggle {
-    @apply w-9 h-5 accent-blue-600 cursor-pointer;
   }
 }
 
@@ -387,14 +112,6 @@
   .cursor-blink {
     @apply inline-block w-0.5 h-4 bg-current ml-0.5 align-middle;
     animation: blink 1s step-end infinite;
-  }
-
-  @keyframes slide-up {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .animate-slide-up {
-    animation: slide-up 200ms ease forwards;
   }
 
   @keyframes fade-in {
